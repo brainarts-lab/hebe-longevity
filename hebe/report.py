@@ -99,8 +99,8 @@ footer p{margin:0 0 6px}
 
 def describe_delta(delta):
     if abs(delta)<0.05:return 'The same as your calendar age'
-    if delta<0:return f'{abs(delta):.1f} years below your calendar age'
-    return f'{delta:.1f} years above your calendar age'
+    if delta<0:return f'{abs(delta):.1f} years younger than your calendar age'
+    return f'{delta:.1f} years older than your calendar age'
 
 def marker_name(marker):return NAMES.get(marker,(marker,''))[0]
 def unit_label(unit):return UNIT_LABELS.get(unit,unit)
