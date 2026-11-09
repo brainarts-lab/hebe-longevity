@@ -72,19 +72,36 @@ class Plans:
         if findings:
             args += ['--findings', self.plsi.write(f'{plan_id}.findings.json', findings)]
         screened = self.plsi.run(*args)
-        checked = self.plsi.run('plan', 'check', '--instance', person, '--file', plan_path)
+        outcomes = screened.get('outcomes', {})
+        try:
+            checked = self.plsi.run('plan', 'check', '--instance', person, '--file', plan_path)
+        except PlsiError as error:
+            if not error.violations:
+                raise
+            # PLSI rule G3: a caution needs the user's acknowledgement. In Hebe that is the start dialog,
+            # so it is pending here, not a fault in the draft. Every other violation stays a violation.
+            ids = [a.get('local_id') for a in plan['actions']]
+            def awaiting(v):
+                path = str(v.get('path', ''))
+                index = int(path.split('.')[1]) if path.startswith('actions.') and path.split('.')[1].isdigit() else -1
+                return v.get('rule') == 'G3' and 0 <= index < len(ids) and outcomes.get(ids[index]) == 'caution'
+            checked = {'ok': not [v for v in error.violations if not awaiting(v)],
+                       'violations': [f'{v.get("path")}: {v.get("message")} ({v.get("hint")})' for v in error.violations if not awaiting(v)],
+                       'awaiting_acknowledgement': [ids[int(str(v['path']).split('.')[1])] for v in error.violations if awaiting(v)]}
         body = {'person': person, 'plan': plan, 'findings': findings or {}, 'screen': screened, 'check': checked}
         with self.service.db() as db:
             db.execute('INSERT INTO plan_drafts (id, person, body, created) VALUES (?,?,?,?) '
                        'ON CONFLICT(id) DO UPDATE SET body=excluded.body, created=excluded.created',
                        (plan_id, person, encode(body), time.time()))
-        outcomes = screened.get('outcomes', {})
         return {'ok': checked.get('ok', False), 'stage': 'plsi', 'plan_id': plan_id, 'screening': outcomes,
+                'awaiting_user_acknowledgement': checked.get('awaiting_acknowledgement', []),
                 'blocked': sorted(a for a, o in outcomes.items() if o == 'block'),
                 'cautions': sorted(a for a, o in outcomes.items() if o == 'caution'),
                 'violations': checked.get('violations', []),
-                'next': 'Run hebe_challenge with this plan_id, answer the objections, then ask the user to enter '
-                        f'/hebe plan start {plan_id[:12]} to review and start it. You cannot start plans.'}
+                'next': ('Fix these PLSI violations and run hebe_plan_check again.' if not checked.get('ok', False) else
+                         'Run hebe_challenge with this plan_id and answer the objections. Then ask the user to start it on the '
+                         f'Plans tab of the Hebe page or with /hebe plan start {plan_id[:12]}. Cautions are acknowledged by the user '
+                         'when they start. You cannot start plans.')}
 
     def draft(self, plan_id):
         if not isinstance(plan_id, str) or not re.fullmatch(r'[0-9a-f]{6,64}', plan_id):
@@ -143,7 +160,10 @@ class Plans:
         if hebe_gate(plan):
             raise ValueError('The plan no longer passes the Hebe gate.')
         self._sync(person)
-        screened = self.plsi.run('screen', '--instance', person, '--file', self.plsi.write(f'{key}.start.json', plan))
+        args = ['screen', '--instance', person, '--file', self.plsi.write(f'{key}.start.json', plan)]
+        if body.get('findings'):  # the planner's findings can only raise the outcome; keep them for the start
+            args += ['--findings', self.plsi.write(f'{key}.start-findings.json', body['findings'])]
+        screened = self.plsi.run(*args)
         outcomes = screened.get('outcomes', {})
         if any(o == 'block' for o in outcomes.values()):
             raise ValueError('PLSI screening blocks an action; the plan cannot start.')

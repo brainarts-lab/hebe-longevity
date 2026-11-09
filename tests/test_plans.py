@@ -92,6 +92,23 @@ class Planning(unittest.TestCase):
         self.assertIn('already started', handle(Answer('start'), self.home, f'plan start {pid} 2026-11-10'))
         self.assertEqual(len(self.recorded()), before + 1)
 
+    def test_caution_waits_for_the_user_and_is_acknowledged_at_start(self):
+        plan = json.loads(json.dumps(PLAN)); plan['objective'] = 'lower phenoage_acceleration, caution test'
+        findings = {'a1': [{'severity': 'caution', 'source': {'kind': 'pmid', 'id': '16818923'}, 'summary': 'Older study population.'}]}
+        checked = self.plans().check('alex-demo', plan, findings)
+        self.assertTrue(checked['ok'], checked)
+        self.assertEqual(checked['awaiting_user_acknowledgement'], ['a1']); self.assertEqual(checked['violations'], [])
+        self.plans().challenge(checked['plan_id'], lambda m: 'VERDICT: no objections')
+        out = self.plans().start(checked['plan_id'], '2026-11-10')
+        self.assertFalse(out['already_started'])
+
+    def test_unverified_source_violation_is_named_for_the_model(self):
+        plan = json.loads(json.dumps(PLAN)); plan['objective'] = 'lower phenoage_acceleration, unverified source'
+        plan['claims'][0]['sources'] = [{'kind': 'pmid', 'id': '99999999'}]  # never verified: PLSI rule G5
+        checked = self.plans().check('alex-demo', plan)
+        self.assertFalse(checked['ok']); self.assertTrue(checked['violations'])
+        self.assertTrue(all(':' in v for v in checked['violations']))
+
     def test_bridge_allowlist_blocks_other_plsi_commands(self):
         for args in (('mothership', 'join'), ('plan', 'review'), ('retract',), ('feedback', 'send')):
             with self.subTest(args=args), self.assertRaises(PlsiError):

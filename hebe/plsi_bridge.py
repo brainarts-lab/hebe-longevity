@@ -37,7 +37,10 @@ LOINC = {'albumin': '1751-7', 'creatinine': '14682-9', 'glucose': '14749-6', 'cr
 
 
 class PlsiError(ValueError):
-    """PLSI refused a request or could not run."""
+    """PLSI refused a request or could not run. `violations` keeps PLSI's own gate findings."""
+    def __init__(self, message, violations=()):
+        super().__init__(message)
+        self.violations = list(violations)
 
 
 class Plsi:
@@ -70,7 +73,10 @@ class Plsi:
             raise PlsiError('PLSI returned no result.') from None
         if not out.get('ok'):
             error = out.get('error') or {}
-            raise PlsiError(f'PLSI refused: {error.get("message") or error or "unknown error"}')
+            found = error.get('violations') or [] if isinstance(error, dict) else []
+            detail = '; '.join(f'{v.get("path")}: {v.get("message")} ({v.get("hint")})' for v in found if isinstance(v, dict))
+            raise PlsiError(f'PLSI refused: {error.get("message") or error or "unknown error"}' + (f'. {detail}' if detail else ''),
+                            [v for v in found if isinstance(v, dict)])
         return out['data']
 
     def write(self, name, payload):

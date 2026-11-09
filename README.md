@@ -1,19 +1,24 @@
 # Hebe Longevity
 
-**Longevity Intelligence for Hermes**
+**Personal Longevity Intelligence for Hermes**
+
+How old is your blood? Hebe turns a routine blood test into your Blood PhenoAge, shows what moves it and helps you plan what to try next, with the open toolbelt behind Longevity Grok running inside your Hermes.
 
 ### What you get
 
+- **A Hebe page in Hermes Desktop.** Open **Hebe** in the sidebar: add a blood test, check every value, see your report, start plans. All with clicks, no files or commands needed
 - **Your Blood PhenoAge** from nine routine blood markers, calculated with the same original formula Longevity Grok uses
 - **Your trend** across blood draws and which values moved your result
-- **A plan to lower it**, built the Longevity Grok way: verified evidence, safety screening, an independent challenger and a start that only you can approve
-- **One install, one chat.** Longevity Grok creates a team of bots; on Hermes the same roles run as skills in your agent, and your data stays in your Hermes home
+- **A plan to lower it**, built the Longevity Grok way: verified studies, safety screening, an independent challenger model, and a start that only you can approve
+- **One install.** Longevity Grok creates a team of bots; in Hermes the same roles run as skills in your agent, and your data stays in your Hermes home
 
 ### What you do
 
-1. `/hebe` to try the fictional demo, or `/hebe import` for your own values
-2. Ask in chat: "What could I try to lower my Blood PhenoAge?"
-3. `/hebe plan start PLAN_ID` to start a plan. `/hebe help` shows everything
+1. Open **Hebe** in the sidebar and select **Try it with demo data**, or type in the nine values from your own lab report
+2. Ask Hebe in chat: "What could I try to lower my Blood PhenoAge?"
+3. Start the plan on the **Plans** tab
+
+No Desktop? The same works with `/hebe` in any Hermes chat; `/hebe help` shows everything.
 
 Longevity Grok's open PLSI toolbelt, pinned and unchanged, running inside Hermes. Confirm a blood panel, get a traceable blood PhenoAge, your trend and what moved it, then draft a screened plan that an independent challenger checks and only you can start.
 
