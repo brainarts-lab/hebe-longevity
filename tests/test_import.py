@@ -27,7 +27,7 @@ class ImportTests(unittest.TestCase):
         self.assertEqual(s.commit(p['id'],True),r);self.assertEqual(len(s.results()),1)
     def test_invalid_input_never_persists(self):
         s=self.api()
-        for field,value in [('person_id','other'),('draw_id','draw-2'),('status','entered-in-error'),('value','-44'),('unit','mg/dL'),('value','NaN'),('collected_at','2026-10-21')]:
+        for field,value in [('person_id','other'),('draw_id','draw-2'),('status','entered-in-error'),('value','-44'),('unit','mmol/L'),('value','NaN'),('collected_at','2026-10-21')]:
             original=self.rows[0][field];self.rows[0][field]=value
             with self.subTest(field=field,value=value):
                 with self.assertRaises(ValueError):s.preview(self.payload(),1981,'alex-demo')

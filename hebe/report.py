@@ -2,7 +2,8 @@
 from datetime import date
 import hashlib
 import html
-from .service import DEMO_FILES, DEMO_PERSON, DEMO_BIRTH_YEAR
+from .service import DEMO_FILES, DEMO_PERSON, DEMO_BIRTH_YEAR, UNITS as UNITS_FOR_LABEL
+from .drivers import explain_change, previous_draw
 from pathlib import Path
 
 NAMES = {'albumin':('Albumin','Liver and nutrition'),
@@ -14,7 +15,7 @@ NAMES = {'albumin':('Albumin','Liver and nutrition'),
          'rdw':('Cell size variation','Red blood cell spread'),
          'alp':('Alkaline phosphatase','Liver and bone'),
          'wbc':('White blood cells','Immune system')}
-UNIT_LABELS = {'umol/L':'µmol/L','10*3/uL':'×10³/µL'}
+UNIT_LABELS = {'umol/L':'µmol/L','10*3/uL':'×10³/µL','10*9/L':'×10⁹/L'}
 
 CSS = '''
 :root{color-scheme:light dark;
@@ -74,6 +75,9 @@ h2{font-size:22px;font-weight:700;letter-spacing:-.025em;margin:0 4px 10px}
 @media (max-width:520px){.checks{grid-template-columns:1fr}.checks li:nth-child(2){border-top:1px solid var(--line)}.checks li:nth-child(odd){border-right:0}}
 .value small{display:block;font-size:12px;font-weight:400;color:var(--faint)}
 .trend li[aria-current] .value{color:var(--accent)}
+.drivers .value{min-width:96px}
+.drivers .value i{display:block;height:4px;border-radius:2px;margin:6px 0 0 auto;background:var(--calendar)}
+.drivers .value.down i{background:var(--accent)}
 .note{font-size:13px;color:var(--muted);margin:8px 20px 0}
 details{background:var(--surface);border-radius:18px;margin:0 0 12px}
 summary{list-style:none;cursor:pointer;padding:16px 20px;font-size:16px;font-weight:500;display:flex;justify-content:space-between;align-items:center;border-radius:18px}
@@ -124,6 +128,31 @@ def render_trend(history,current,e):
             f'<p class="note">Over {years:.1f} calendar years your Blood PhenoAge {moved}. '
             f'Each row is one blood draw.</p></section>')
 
+def years(v):
+    return f'{"+" if v>0 else "−"}{abs(v):.1f} years' if abs(v)>=0.05 else '±0.0 years'
+
+def driver_label(effect):
+    if effect['kind']=='age':return 'Calendar age', f'{effect["from"]:.1f} to {effect["to"]:.1f}'
+    if effect['kind']=='combined':return 'Combined effects', 'Values interacting in the formula'
+    unit=unit_label(UNITS_FOR_LABEL.get(effect['marker'],''))
+    return marker_name(effect['marker']), f'{_num(effect["from"])} to {_num(effect["to"])} {unit}'.strip()
+
+def render_drivers(history,current,e):
+    previous=previous_draw(history,current)
+    if previous is None:return ''
+    change=explain_change(previous,current)
+    shown=[x for x in change['effects'] if abs(x['years'])>=0.05]
+    scale=max([abs(x['years']) for x in shown] or [1])
+    rows=''.join(
+        f'<li><div class="name"><b>{e(driver_label(x)[0])}</b><span>{e(driver_label(x)[1])}</span></div>'
+        f'<div class="value {"down" if x["years"]<0 else "up"}">{e(years(x["years"]))}'
+        f'<i aria-hidden="true" style="width:{abs(x["years"])/scale*100:.0f}%"></i></div></li>' for x in shown)
+    return (f'<section aria-labelledby="drivers"><h2 id="drivers">What moved your result</h2>'
+            f'<ul class="group markers drivers">{rows}</ul>'
+            f'<p class="note">Since {e(_date(previous["measured_at"]))} your Blood PhenoAge changed by {e(years(change["total"]))}. '
+            'Each row recalculates the original PhenoAge formula with one value from this draw and the rest from the previous one. '
+            'It shows how the formula responds, not what caused the change.</p></section>')
+
 def _date(iso):
     try:
         d=date.fromisoformat(iso)
@@ -151,7 +180,7 @@ def render(result, units, history=None):
         for m in units)
     units_check=(f'{len(conv)} units converted with documented factors' if conv else 'Units match the formula, nothing converted')
     checks=''.join(f'<li>{e(c.format(n=len(result["values"]),units=units_check))}</li>' for c in CHECKS)
-    trend=render_trend(history,result,e)
+    trend=render_trend(history,result,e)+render_drivers(history,result,e)
     many=len(history)>1
     draw_point=('<li><strong>A change between draws</strong> can come from the lab, the day or the season, not only from you.</li>' if many
                 else '<li><strong>One blood draw</strong> shows a snapshot, not a trend.</li>')

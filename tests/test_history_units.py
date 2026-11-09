@@ -35,7 +35,7 @@ class Units(unittest.TestCase):
     def test_lab_units_give_the_same_result_as_canonical_units(self):
         _,base=self.save(CANONICAL,draw='a')
         lab=[('albumin','4.4','g/dL'),('creatinine','0.904772','mg/dL'),('glucose','90.0799','mg/dL'),('crp','1','mg/L'),
-             ('lymphocyte_pct','30','%'),('mcv','90','fL'),('rdw','13','%'),('alp','60','U/L'),('wbc','5','G/L')]
+             ('lymphocyte_pct','30','%'),('mcv','90','fL'),('rdw','13','%'),('alp','60','U/L'),('wbc','5','10*9/L')]
         p,r=self.save(lab,draw='b',day='2026-10-21')
         self.assertAlmostEqual(r['pheno_age'],base['pheno_age'],places=2)
         converted={c['marker']:c for c in r['conversions']}
@@ -48,13 +48,18 @@ class Units(unittest.TestCase):
 
     def test_unknown_units_are_refused_and_nothing_is_stored(self):
         for marker,value,unit in [('creatinine','9','mg/L'),('glucose','5','mmol/mol'),('crp','1','mg/l'),
-                                  ('albumin','44','g/l'),('wbc','5','/uL'),('rdw','13','fL')]:
+                                  ('albumin','44','g/l'),('wbc','5','/uL'),('rdw','13','fL'),('wbc','5','G/L'),('wbc','5','/nL'),
+                                  ('lymphocyte_pct','0.3','1'),('glucose','0.9','g/L')]:
             with self.subTest(unit=unit),self.assertRaises(ValueError):
                 self.s.preview(panel(replace(marker,value,unit)),1981,'p1')
         self.assertEqual(self.s.results(),[])
 
-    def test_crp_that_rounds_to_zero_after_conversion_is_refused(self):
-        with self.assertRaises(ValueError):self.s.preview(panel(replace('crp','0.000001','mg/L')),1981,'p1')
+    def test_generic_scale_matches_plsi_and_never_crosses_quantity_kinds(self):
+        # PLSI's generic UCUM scale: same base, different prefix (mg/dL albumin -> g/L)
+        p=self.s.preview(panel(replace('albumin','4400','mg/dL')),1981,'p1')
+        self.assertEqual(p['conversions'][0]['value'],44.0)
+        # Mass to molar is a different quantity: refused like PLSI's NO_CONVERSION
+        with self.assertRaises(ValueError):self.s.preview(panel(replace('albumin','0.6','mmol/L')),1981,'p1')
 
     def test_history_is_per_person_and_sorted_by_collection_date(self):
         self.save(CANONICAL,draw='late',day='2026-10-20')
@@ -95,3 +100,34 @@ class DemoFlow(unittest.TestCase):
             self.assertIn('alex-demo, 20 October 2026: 37.2 years',handle(None,home,'status'))
 
 if __name__=='__main__':unittest.main()
+
+class Drivers(unittest.TestCase):
+    def setUp(self):
+        self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup);self.s=Service(self.tmp.name)
+    def save(self,markers,draw,day):
+        p=self.s.preview(panel(markers,draw=draw,day=day),1981,'p1');return self.s.commit(p['id'],True)
+
+    def test_effects_add_up_to_the_real_change_and_skip_unchanged_markers(self):
+        from hebe.drivers import explain_change
+        a=self.save(CANONICAL,'a','2025-10-14')
+        b=self.save(replace('crp','0.4','mg/dL')[:7]+[('alp','90','U/L'),('wbc','5','10*3/uL')],'b','2026-10-20')
+        change=explain_change(a,b)
+        self.assertAlmostEqual(change['total'],b['pheno_age']-a['pheno_age'],places=9)
+        self.assertAlmostEqual(sum(x['years'] for x in change['effects']),change['total'],places=9)
+        markers={x['marker']:x for x in change['effects'] if x['kind']=='marker'}
+        self.assertEqual(set(markers),{'crp','alp'})
+        # Original formula: higher CRP and ALP raise PhenoAge; a year of calendar age raises it too
+        self.assertGreater(markers['crp']['years'],0);self.assertGreater(markers['alp']['years'],0)
+        self.assertGreater(next(x for x in change['effects'] if x['kind']=='age')['years'],0)
+
+    def test_drivers_only_appear_with_an_earlier_draw(self):
+        a=self.save(CANONICAL,'a','2025-10-14')
+        self.assertNotIn('What moved your result',self.s.report(a['id']))
+        b=self.save(replace('crp','0.4','mg/dL'),'b','2026-10-20')
+        self.assertIn('What moved your result',self.s.report(b['id']))
+        self.assertNotIn('What moved your result',self.s.report(a['id']))
+
+    def test_demo_result_names_biggest_movers(self):
+        with tempfile.TemporaryDirectory() as home:
+            handle(Confirm(),home,'');out=handle(Confirm(),home,'')
+            self.assertIn('Biggest movers in the formula: ',out)

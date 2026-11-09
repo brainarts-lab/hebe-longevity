@@ -9,23 +9,20 @@ from pathlib import Path
 import re
 import sqlite3
 import time
+from types import SimpleNamespace
 from .plsi_kernel import chronological_age, phenoage
+from .plsi_units import to_canonical
 
 PIN = '17c433c4a9ecb54279ab02ba1d7d63ee8e8a2e81'
 UNITS = {'albumin':'g/L','creatinine':'umol/L','glucose':'mmol/L','crp':'mg/dL',
          'lymphocyte_pct':'%','mcv':'fL','rdw':'%','alp':'U/L','wbc':'10*3/uL'}
-# Accepted alternative units. Molar conversions come from the pinned PLSI map (Young 1987);
-# prefix conversions are exact. Anything else is refused, never guessed.
+# Unit handling follows PLSI exactly: the map's sourced conversions first, then PLSI's generic UCUM
+# prefix/volume scale (hebe/plsi_units.py, unchanged). Anything else is refused, never guessed.
 YOUNG_1987 = 'PLSI blood_phenoage map, Young DS 1987, doi:10.7326/0003-4819-106-1-114'
-CONVERSIONS = {
-    ('creatinine','mg/dL'):(88.42,YOUNG_1987),
-    ('glucose','mg/dL'):(0.0555062167,YOUNG_1987),
-    ('albumin','g/dL'):(10,'exact prefix conversion'),
-    ('crp','mg/L'):(0.1,'exact prefix conversion'),
-    ('wbc','10*9/L'):(1,'exact prefix conversion'),
-    ('wbc','G/L'):(1,'exact prefix conversion'),
-    ('wbc','/nL'):(1,'exact prefix conversion'),
-}
+MAP_CONVERSIONS = {'creatinine':[SimpleNamespace(from_unit='mg/dL',factor=88.42)],
+                   'glucose':[SimpleNamespace(from_unit='mg/dL',factor=0.0555062167)]}
+def coordinate(marker):
+    return SimpleNamespace(unit=UNITS[marker],conversions=MAP_CONVERSIONS.get(marker,[]))
 FIELDS = ['person_id','draw_id','collected_at','observation_id','status','marker','value','unit']
 ID = re.compile(r'[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}')
 DEMO_FILES = ('demo.csv','demo-earlier.csv')
@@ -69,19 +66,21 @@ def parse(data, birth_year, person):
         dates.add(measured.isoformat());marker=row['marker']
         if marker not in UNITS or marker in values:
             raise ValueError('Unknown or duplicate marker.')
-        if row['unit']!=UNITS[marker] and (marker,row['unit']) not in CONVERSIONS:
-            raise ValueError(f'Unsupported unit {row["unit"]!r} for {marker}; no guessed conversions.')
+        if UNITS[marker]=='%' and row['unit']!='%':
+            raise ValueError(f'Unsupported unit {row["unit"]!r} for {marker}; PLSI has no conversion, nothing guessed.')
         if not re.fullmatch(r'[0-9]+(?:\.[0-9]+)?',row['value']):
             raise ValueError('Values must be unsigned decimal numbers with a point; no spaces or exponent notation.')
         try: value=float(row['value'])
         except ValueError: raise ValueError('Values must be decimal numbers with a point.') from None
         if not math.isfinite(value) or value<0 or (marker=='crp' and value<=0) or (UNITS[marker]=='%' and value>100):
             raise ValueError('Physically invalid value or unsupported CRP bound.')
-        if row['unit']!=UNITS[marker]:
-            factor,source=CONVERSIONS[(marker,row['unit'])]
-            converted=round(value*factor,6)
-            conversions.append({'marker':marker,'from_value':value,'from_unit':row['unit'],'factor':factor,
-                                'value':converted,'unit':UNITS[marker],'source':source})
+        try: converted,conversion=to_canonical(value,row['unit'],coordinate(marker))
+        except ValueError: raise ValueError(f'Unsupported unit {row["unit"]!r} for {marker}; PLSI has no conversion, nothing guessed.') from None
+        if conversion:
+            sourced=any(c.from_unit==row['unit'] for c in coordinate(marker).conversions)
+            conversions.append({'marker':marker,'from_value':value,'from_unit':row['unit'],'factor':conversion['factor'],
+                                'value':converted,'unit':UNITS[marker],
+                                'source':YOUNG_1987 if sourced else 'PLSI generic UCUM prefix scale (map/units.py)'})
             value=converted
         if marker=='crp' and value<=0:
             raise ValueError('CRP is too small to calculate after unit conversion.')

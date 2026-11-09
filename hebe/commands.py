@@ -6,7 +6,8 @@ import shlex
 import stat
 import sqlite3
 from .service import Service, DISCLAIMER, DEMO_FILES, DEMO_PERSON, DEMO_BIRTH_YEAR
-from .report import describe_delta, marker_name, unit_label
+from .report import describe_delta, marker_name, unit_label, years
+from .drivers import explain_change, previous_draw
 
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -53,6 +54,10 @@ def result_text(r,report,history=(),saved=None):
         first,last=history[0],history[-1]
         trend+=[f'Across {len(history)} blood draws since {_day(first["measured_at"])}: '
                f'{first["pheno_age"]:.1f} to {last["pheno_age"]:.1f} years']
+    previous=previous_draw(list(history),r) if history else None
+    if previous:
+        top=[x for x in explain_change(previous,r)['effects'] if x['kind']=='marker'][:2]
+        if top:trend.append('Biggest movers in the formula: '+', '.join(f'{marker_name(x["marker"])} {years(x["years"])}' for x in top))
     return '\n'.join([
         f'Blood PhenoAge: {r["pheno_age"]:.1f} years',
         f'{describe_delta(r["delta"])} ({r["chrono_age"]:.1f})',*trend,'',

@@ -14,7 +14,7 @@ hermes plugins install https://github.com/brainarts-studio/hebe-longevity
 
 The repository is currently private: your GitHub account needs access and Hermes must be able to authenticate Git. For a local checkout, install this directory using `hermes plugins install /absolute/path/to/hebe-longevity`. Enable `hebe-longevity` if your installer does not enable it, then start a new Hermes chat.
 
-Enter **`/hebe`**. Review the fictional Alex Demo panel and select **Save and calculate**. Hebe returns blood PhenoAge and a local report link. Enter `/hebe` a second time to add an earlier fictional draw in typical lab units (mg/dL, g/dL, G/L); the report then shows your trend across both draws. This requires a Hermes surface supporting plugin confirmation dialogs; if no dialog is available, nothing is committed. Report links point to the machine running Hermes; remote messenger clients may not open them.
+Enter **`/hebe`**. Review the fictional Alex Demo panel and select **Save and calculate**. Hebe returns blood PhenoAge and a local report link. Enter `/hebe` a second time to add an earlier fictional draw in typical lab units (mg/dL, g/dL, 10\*9/L); the report then shows your trend and what moved your result. This requires a Hermes surface supporting plugin confirmation dialogs; if no dialog is available, nothing is committed. Report links point to the machine running Hermes; remote messenger clients may not open them.
 
 ## Your own CSV (advanced, research use only)
 
@@ -24,19 +24,9 @@ Copy `data/demo.csv` as the template. Replace fictional data with your local pse
 /hebe import "/absolute/path/panel.csv" 1981 person-id
 ```
 
-All nine markers, one matching person, one draw/date, unique observation IDs and `status=final` are required. Accepted units: the canonical unit for each marker (see `data/demo.csv`) or one of these documented alternatives, converted on import and shown before you confirm:
+All nine markers, one matching person, one draw/date, unique observation IDs and `status=final` are required. Units follow PLSI exactly (`hebe/plsi_units.py`, the unchanged `map/units.py`): the canonical unit, a conversion sourced in the pinned PLSI map (creatinine and glucose from mg/dL, Young 1987), or PLSI's generic UCUM prefix/volume scale within the same kind of quantity (for example albumin g/dL, CRP mg/L, WBC 10\*9/L). Conversions between kinds of quantity (mass to molar) or unknown spellings are refused; no guessed conversions. Every conversion is shown before you confirm. The original value and unit stay in the confirmed snapshot. Files are limited to 64 KiB. Negative values, nonfinite values, percentages outside 0–100, CRP <=0, future dates and minors are refused. Only unsigned plain decimal notation is accepted (for example `44` or `4.4`, without spaces or exponents). With birth year alone, the collection year must be at least birth year + 19 to establish adulthood conservatively. These checks are not a complete medical plausibility assessment. Birth year is approximated to mid-year by the upstream age formula.
 
-| Marker | Alternative unit | Factor | Source |
-|---|---|---|---|
-| Creatinine | mg/dL | × 88.42 → µmol/L | pinned PLSI map, Young 1987 |
-| Glucose | mg/dL | × 0.0555062167 → mmol/L | pinned PLSI map, Young 1987 |
-| Albumin | g/dL | × 10 → g/L | exact prefix conversion |
-| CRP | mg/L | × 0.1 → mg/dL | exact prefix conversion |
-| White blood cells | 10\*9/L, G/L, /nL | × 1 → 10\*3/uL | exact prefix conversion |
-
-Unit spelling must match exactly. Any other unit is refused; no guessed conversions. The original value and unit stay in the confirmed snapshot. Files are limited to 64 KiB. Negative values, nonfinite values, percentages outside 0–100, CRP <=0, future dates and minors are refused. Only unsigned plain decimal notation is accepted (for example `44` or `4.4`, without spaces or exponents). With birth year alone, the collection year must be at least birth year + 19 to establish adulthood conservatively. These checks are not a complete medical plausibility assessment. Birth year is approximated to mid-year by the upstream age formula.
-
-`/hebe status` lists saved results. Several draws of the same person form a trend in the report; the headline always shows the latest draw. `/hebe report RESULT_ID` regenerates the report. A repeated confirmation is idempotent. Changing an existing draw is refused; corrections are not supported yet.
+`/hebe status` lists saved results. Several draws of the same person form a trend in the report; the headline always shows the latest draw. **What moved your result** recalculates the original PhenoAge formula with one value from the newer draw and the rest from the previous draw, the same method as PLSI's `plsi calc derive --set`. A remainder from values interacting in the formula is shown so the rows add up to the real change. This describes the formula's response, not a cause or a recommendation. No outside benchmarks or reference ranges are used. `/hebe report RESULT_ID` regenerates the report. A repeated confirmation is idempotent. Changing an existing draw is refused; corrections are not supported yet.
 
 ## Data and approval
 
@@ -48,9 +38,9 @@ No network or model calls are made by this plugin. **Hermes itself may send chat
 
 ## Supported now
 
-Strict CSV review, documented unit conversions, two fictional demo draws, user confirmation, native command/tool, blood PhenoAge, trend across draws, input provenance and HTML report.
+Strict CSV review, documented unit conversions, two fictional demo draws, user confirmation, native command/tool, blood PhenoAge, trend across draws, formula drivers between draws, input provenance and HTML report.
 
-**Unsupported:** FHIR, PDF/photo extraction, wearables, medication/supplement advice, plans/scoring, marker drivers, counterfactual forecasts, a dashboard tab, DE translation and an offline security boundary. Rejecting FHIR does not repair the upstream FHIR importer.
+**Unsupported:** FHIR, PDF/photo extraction, wearables, medication/supplement advice, plans/scoring, counterfactual forecasts, a dashboard tab, DE translation and an offline security boundary. Rejecting FHIR does not repair the upstream FHIR importer.
 
 The first milestone selectively vendors unchanged PLSI numerical definitions instead of installing the incomplete upstream wheel. No PLSI executable extensions, relay, automatic updates or specialist skills are included. See `NOTICE.md` and `vendor/provenance.json`.
 

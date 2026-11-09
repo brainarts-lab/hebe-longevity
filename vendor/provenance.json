@@ -8,5 +8,20 @@
     "chronological_age",
     "phenoage"
   ],
-  "kernel_sha256": "1131fa59f1f160e9873d56842371cf841e82e143cce1cc7fe0f1dfd17dabcde5"
+  "kernel_sha256": "1131fa59f1f160e9873d56842371cf841e82e143cce1cc7fe0f1dfd17dabcde5",
+  "units": {
+    "source": "src/plsi/map/units.py",
+    "source_sha256": "6b1ce116b695e38f3e18cc860b11096e1eae43dadb986d22bf7bd5d33dde0d33",
+    "change": "removed the MapCoordinate import line; annotations only",
+    "file": "hebe/plsi_units.py",
+    "file_sha256": "55dd39d2d84211f396e945be972b61e60fc2b76b0e8fb7460de8195d4c951b4e"
+  },
+  "conversions": {
+    "source": "maps/blood_phenoage.yaml",
+    "source_sha256": "dc8ae1005da816e76b55742f684c7ab68b5a79ceb82e31fcd5034fe9bc1a5af5",
+    "values": {
+      "creatinine mg/dL": 88.42,
+      "glucose mg/dL": 0.0555062167
+    }
+  }
 }
