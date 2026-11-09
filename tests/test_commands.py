@@ -23,7 +23,7 @@ class Commands(unittest.TestCase):
                     self.seen=question
                     return 'save'
             ctx=Context();result=handle(ctx,home,'')
-            self.assertEqual(ctx.count,1);self.assertIn('albumin: 44',ctx.seen)
+            self.assertEqual(ctx.count,1);self.assertIn('Albumin: 44 g/L',ctx.seen);self.assertIn('Research',ctx.seen)
             self.assertIn('37.2',result);self.assertEqual(len(list(Path(home).glob('report-*.html'))),1)
     def test_tool_errors_are_json_and_do_not_execute_shell(self):
         with tempfile.TemporaryDirectory() as home:

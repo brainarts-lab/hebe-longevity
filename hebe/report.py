@@ -2,6 +2,7 @@
 from datetime import date
 import hashlib
 import html
+from .service import DEMO_FILES, DEMO_PERSON, DEMO_BIRTH_YEAR
 from pathlib import Path
 
 NAMES = {'albumin':('Albumin','Liver and nutrition'),
@@ -64,6 +65,15 @@ h2{font-size:22px;font-weight:700;letter-spacing:-.025em;margin:0 4px 10px}
 .name span{font-size:13px;color:var(--muted)}
 .value{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;font-size:17px;font-weight:600}
 .value span{font-size:13px;font-weight:400;color:var(--muted);margin-left:4px}
+.checks{display:grid;grid-template-columns:1fr 1fr}
+.checks li{position:relative;padding:14px 16px 14px 46px;font-size:15px;line-height:1.35;border-top:1px solid var(--line)}
+.checks li:nth-child(-n+2){border-top:0}
+.checks li:nth-child(odd){border-right:1px solid var(--line)}
+.checks li::before{content:"";position:absolute;left:18px;top:15px;width:18px;height:18px;border-radius:50%;background:var(--accent)}
+.checks li::after{content:"";position:absolute;left:24px;top:19px;width:4px;height:8px;border:solid var(--surface);border-width:0 2px 2px 0;transform:rotate(45deg)}
+@media (max-width:520px){.checks{grid-template-columns:1fr}.checks li:nth-child(2){border-top:1px solid var(--line)}.checks li:nth-child(odd){border-right:0}}
+.value small{display:block;font-size:12px;font-weight:400;color:var(--faint)}
+.trend li[aria-current] .value{color:var(--accent)}
 .note{font-size:13px;color:var(--muted);margin:8px 20px 0}
 details{background:var(--surface);border-radius:18px;margin:0 0 12px}
 summary{list-style:none;cursor:pointer;padding:16px 20px;font-size:16px;font-weight:500;display:flex;justify-content:space-between;align-items:center;border-radius:18px}
@@ -83,6 +93,37 @@ footer p{margin:0 0 6px}
 @media print{:root{--bg:#fff;--surface:#fff}body{background:#fff}.hero,.group,details{border:1px solid #ddd}details .inner{display:block}}
 '''
 
+def describe_delta(delta):
+    if abs(delta)<0.05:return 'The same as your calendar age'
+    if delta<0:return f'{abs(delta):.1f} years below your calendar age'
+    return f'{delta:.1f} years above your calendar age'
+
+def marker_name(marker):return NAMES.get(marker,(marker,''))[0]
+def unit_label(unit):return UNIT_LABELS.get(unit,unit)
+
+CHECKS=('All {n} required markers present','One person and one blood draw','Final lab values only',
+        '{units}','Values within physical limits','Confirmed by you before saving')
+
+def _num(v):return f'{v:.4g}' if v<100 else f'{v:.1f}'.rstrip('0').rstrip('.')
+
+def _from(c,e):
+    if not c:return ''
+    return f'<small>from {e(format(c["from_value"],"g"))} {e(unit_label(c["from_unit"]))}</small>'
+
+def render_trend(history,current,e):
+    if len(history)<2:return ''
+    first,last=history[0],history[-1]
+    change=last['pheno_age']-first['pheno_age']; years=last['chrono_age']-first['chrono_age']
+    if abs(change)<0.05:moved='stayed the same'
+    else:moved=f'{"fell" if change<0 else "rose"} by {abs(change):.1f} years'
+    rows=''.join(
+        f'<li{" aria-current=\"true\"" if r["id"]==current["id"] else ""}><div class="name"><b>{e(_date(r["measured_at"]))}</b>'
+        f'<span>Calendar age {r["chrono_age"]:.1f}</span></div><div class="value">{r["pheno_age"]:.1f}<span>years</span></div></li>'
+        for r in reversed(history))
+    return (f'<section aria-labelledby="trend"><h2 id="trend">Your trend</h2><ul class="group markers trend">{rows}</ul>'
+            f'<p class="note">Over {years:.1f} calendar years your Blood PhenoAge {moved}. '
+            f'Each row is one blood draw.</p></section>')
+
 def _date(iso):
     try:
         d=date.fromisoformat(iso)
@@ -90,23 +131,32 @@ def _date(iso):
     except (TypeError,ValueError):
         return str(iso)
 
-def render(result, units):
+def render(result, units, history=None):
     e=lambda value:html.escape(str(value),quote=True)
-    demo_path=Path(__file__).resolve().parents[1]/'data/demo.csv'
-    demo=(result['person_id']=='alex-demo' and result['birth_year']==1981 and
-          result['source_sha256']==hashlib.sha256(demo_path.read_bytes()).hexdigest())
+    data=Path(__file__).resolve().parents[1]/'data'
+    demo_hashes={hashlib.sha256((data/n).read_bytes()).hexdigest() for n in DEMO_FILES}
+    demo=(result['person_id']==DEMO_PERSON and result['birth_year']==DEMO_BIRTH_YEAR and
+          result['source_sha256'] in demo_hashes)
+    history=history or [result]
+    conv={c['marker']:c for c in result.get('conversions',[])}
     banner=('<p class="demo"><strong>Sample report.</strong> These values belong to the fictional Alex Demo, not to you.</p>'
             if demo else '')
     pheno=result['pheno_age']; chrono=result['chrono_age']; delta=result['delta']
-    if abs(delta)<0.05:verdict='The same as your calendar age'
-    elif delta<0:verdict=f'{abs(delta):.1f} years below your calendar age'
-    else:verdict=f'{delta:.1f} years above your calendar age'
+    verdict=describe_delta(delta)
     scale=max(pheno,chrono)*1.12 or 1
     width=lambda v:f'{max(4,min(100,v/scale*100)):.1f}%'
     rows=''.join(
-        f'<li><div class="name"><b>{e(NAMES.get(m,(m,""))[0])}</b><span>{e(NAMES.get(m,(m,""))[1])}</span></div>'
-        f'<div class="value">{e(format(result["values"][m],"g"))}<span>{e(UNIT_LABELS.get(units[m],units[m]))}</span></div></li>'
+        f'<li><div class="name"><b>{e(marker_name(m))}</b><span>{e(NAMES.get(m,(m,""))[1])}</span></div>'
+        f'<div class="value">{e(_num(result["values"][m]))}<span>{e(unit_label(units[m]))}</span>{_from(conv.get(m),e)}</div></li>'
         for m in units)
+    units_check=(f'{len(conv)} units converted with documented factors' if conv else 'Units match the formula, nothing converted')
+    checks=''.join(f'<li>{e(c.format(n=len(result["values"]),units=units_check))}</li>' for c in CHECKS)
+    trend=render_trend(history,result,e)
+    many=len(history)>1
+    draw_point=('<li><strong>A change between draws</strong> can come from the lab, the day or the season, not only from you.</li>' if many
+                else '<li><strong>One blood draw</strong> shows a snapshot, not a trend.</li>')
+    next_point=('<li><strong>Keep the same lab</strong> and similar conditions, such as fasting, for comparable draws.</li>' if many
+                else '<li><strong>Add another blood draw</strong> later to see how your result changes over time.</li>')
     who='' if demo else f' for {e(result["person_id"])}'
     return f'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark"><title>Hebe Longevity Report</title><style>{CSS}</style></head><body><main>
 <div class="top"><div class="brand">Hebe <span>Longevity</span></div><div class="where">Stored on this device</div></div>
@@ -121,11 +171,15 @@ def render(result, units):
 </div>
 <p class="when">Blood drawn {e(_date(result['measured_at']))}{who}</p>
 </section>
+{trend}
+<section aria-labelledby="checked"><h2 id="checked">Checked before calculation</h2>
+<ul class="group checks">{checks}</ul>
+<p class="note">Hebe refuses incomplete or inconsistent panels instead of guessing.</p></section>
 
 <section aria-labelledby="meaning"><h2 id="meaning">What this means</h2>
 <ul class="group points">
 <li><strong>An estimate from nine blood markers</strong> and your age, not a diagnosis.</li>
-<li><strong>One blood draw</strong> shows a snapshot, not a trend.</li>
+{draw_point}
 <li><strong>A lower number</strong> does not predict how long you will live.</li>
 </ul></section>
 
@@ -135,7 +189,7 @@ def render(result, units):
 
 <section aria-labelledby="next"><h2 id="next">What comes next</h2>
 <ul class="group points">
-<li><strong>Add another blood draw</strong> later to see how your result changes over time.</li>
+{next_point}
 <li><strong>Talk to your doctor</strong> about any value that worries you.</li>
 <li><strong>Coming later:</strong> which markers move your result most.</li>
 </ul></section>

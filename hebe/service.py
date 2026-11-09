@@ -14,8 +14,23 @@ from .plsi_kernel import chronological_age, phenoage
 PIN = '17c433c4a9ecb54279ab02ba1d7d63ee8e8a2e81'
 UNITS = {'albumin':'g/L','creatinine':'umol/L','glucose':'mmol/L','crp':'mg/dL',
          'lymphocyte_pct':'%','mcv':'fL','rdw':'%','alp':'U/L','wbc':'10*3/uL'}
+# Accepted alternative units. Molar conversions come from the pinned PLSI map (Young 1987);
+# prefix conversions are exact. Anything else is refused, never guessed.
+YOUNG_1987 = 'PLSI blood_phenoage map, Young DS 1987, doi:10.7326/0003-4819-106-1-114'
+CONVERSIONS = {
+    ('creatinine','mg/dL'):(88.42,YOUNG_1987),
+    ('glucose','mg/dL'):(0.0555062167,YOUNG_1987),
+    ('albumin','g/dL'):(10,'exact prefix conversion'),
+    ('crp','mg/L'):(0.1,'exact prefix conversion'),
+    ('wbc','10*9/L'):(1,'exact prefix conversion'),
+    ('wbc','G/L'):(1,'exact prefix conversion'),
+    ('wbc','/nL'):(1,'exact prefix conversion'),
+}
 FIELDS = ['person_id','draw_id','collected_at','observation_id','status','marker','value','unit']
 ID = re.compile(r'[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}')
+DEMO_FILES = ('demo.csv','demo-earlier.csv')
+DEMO_PERSON = 'alex-demo'
+DEMO_BIRTH_YEAR = 1981
 DISCLAIMER = 'Research and education only. Not a diagnosis or treatment recommendation. Cloud models can receive tool outputs. This is not a network isolation boundary.'
 
 def parse(data, birth_year, person):
@@ -34,7 +49,7 @@ def parse(data, birth_year, person):
         raise ValueError('Malformed UTF-8 CSV.') from None
     if len(rows)!=9:
         raise ValueError('Exactly nine distinct markers are required for one draw.')
-    values={}; observation_ids=set(); draws=set(); dates=set()
+    values={}; conversions=[]; observation_ids=set(); draws=set(); dates=set()
     for row in rows:
         if set(row)!=set(FIELDS) or any(v is None or not v for v in row.values()):
             raise ValueError('Missing or extra CSV fields.')
@@ -52,19 +67,29 @@ def parse(data, birth_year, person):
         if measured>date.today() or measured.year-birth_year<19:
             raise ValueError('Future measurements are unsupported. With birth year only, collection year must be at least birth year + 19 to establish adulthood.')
         dates.add(measured.isoformat());marker=row['marker']
-        if marker not in UNITS or marker in values or row['unit']!=UNITS[marker]:
-            raise ValueError('Unknown/duplicate marker or unsupported unit; no guessed conversions.')
+        if marker not in UNITS or marker in values:
+            raise ValueError('Unknown or duplicate marker.')
+        if row['unit']!=UNITS[marker] and (marker,row['unit']) not in CONVERSIONS:
+            raise ValueError(f'Unsupported unit {row["unit"]!r} for {marker}; no guessed conversions.')
         if not re.fullmatch(r'[0-9]+(?:\.[0-9]+)?',row['value']):
             raise ValueError('Values must be unsigned decimal numbers with a point; no spaces or exponent notation.')
         try: value=float(row['value'])
         except ValueError: raise ValueError('Values must be decimal numbers with a point.') from None
         if not math.isfinite(value) or value<0 or (marker=='crp' and value<=0) or (UNITS[marker]=='%' and value>100):
             raise ValueError('Physically invalid value or unsupported CRP bound.')
+        if row['unit']!=UNITS[marker]:
+            factor,source=CONVERSIONS[(marker,row['unit'])]
+            converted=round(value*factor,6)
+            conversions.append({'marker':marker,'from_value':value,'from_unit':row['unit'],'factor':factor,
+                                'value':converted,'unit':UNITS[marker],'source':source})
+            value=converted
+        if marker=='crp' and value<=0:
+            raise ValueError('CRP is too small to calculate after unit conversion.')
         values[marker]=value
     if len(draws)!=1 or len(dates)!=1:
         raise ValueError('Mixed blood draws are not supported.')
     return {'person_id':person,'birth_year':birth_year,'draw_id':next(iter(draws)),
-            'measured_at':next(iter(dates)),'values':values,'rows':rows,'source_sha256':hashlib.sha256(data).hexdigest()}
+            'measured_at':next(iter(dates)),'values':values,'rows':rows,'conversions':conversions,'source_sha256':hashlib.sha256(data).hexdigest()}
 
 def encode(data):
     return json.dumps(data,sort_keys=True,separators=(',',':'),allow_nan=False)
@@ -99,7 +124,7 @@ class Service:
                 raise ValueError('Birth year conflicts with the existing person.')
             db.execute('INSERT INTO previews VALUES (?,?,?) ON CONFLICT(id) DO UPDATE SET expires=excluded.expires',(key,serial,time.time()+1800))
         return {'id':key,'person_id':person,'draw_id':body['draw_id'],'measured_at':body['measured_at'],
-                'birth_year':birth_year,'markers':body['rows'],'disclaimer':DISCLAIMER,'expires_in_seconds':1800}
+                'birth_year':birth_year,'markers':body['rows'],'conversions':body['conversions'],'disclaimer':DISCLAIMER,'expires_in_seconds':1800}
     @staticmethod
     def calculate(body):
         at=datetime.fromisoformat(body['measured_at']).replace(tzinfo=timezone.utc)
@@ -132,8 +157,12 @@ class Service:
         with self.db() as db:db.execute('DELETE FROM previews WHERE id=?',(key,))
     def results(self):
         with self.db() as db:return [json.loads(x[0]) for x in db.execute('SELECT body FROM results ORDER BY rowid')]
+    def history(self,person):
+        with self.db() as db:
+            rows=[json.loads(x[0]) for x in db.execute('SELECT body FROM results WHERE person=?',(person,))]
+        return sorted(rows,key=lambda r:(r['measured_at'],r['draw_id']))
     def report(self,key):
         result=next((r for r in self.results() if r['id']==key),None)
         if result is None:raise ValueError('Unknown result.')
         from .report import render
-        return render(result, UNITS)
+        return render(result, UNITS, self.history(result['person_id']))
