@@ -1,0 +1,12 @@
+{
+  "repository": "https://github.com/Insilico-org/plsi",
+  "commit": "17c433c4a9ecb54279ab02ba1d7d63ee8e8a2e81",
+  "source": "src/plsi/map/derive.py",
+  "source_sha256": "882f57f6d6476ad4ac04d2e238cc05a59c8357e289d4dc2bb4e81767c1404c5f",
+  "definitions": [
+    "PHENOAGE_WEIGHTS",
+    "chronological_age",
+    "phenoage"
+  ],
+  "kernel_sha256": "1131fa59f1f160e9873d56842371cf841e82e143cce1cc7fe0f1dfd17dabcde5"
+}

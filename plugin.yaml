@@ -1,0 +1,8 @@
+name: hebe-longevity
+version: "0.1.0"
+description: "Review a blood panel and calculate traceable blood PhenoAge locally. Research prototype with fictional demo labs."
+author: BrainArts
+license: MIT
+requires_hermes: ">=0.23.0"
+provides_tools:
+  - hebe_preview

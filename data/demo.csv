@@ -1,0 +1,10 @@
+person_id,draw_id,collected_at,observation_id,status,marker,value,unit
+alex-demo,draw-1,2026-10-20,0,final,albumin,44,g/L
+alex-demo,draw-1,2026-10-20,1,final,creatinine,80,umol/L
+alex-demo,draw-1,2026-10-20,2,final,glucose,5,mmol/L
+alex-demo,draw-1,2026-10-20,3,final,crp,0.1,mg/dL
+alex-demo,draw-1,2026-10-20,4,final,lymphocyte_pct,30,%
+alex-demo,draw-1,2026-10-20,5,final,mcv,90,fL
+alex-demo,draw-1,2026-10-20,6,final,rdw,13,%
+alex-demo,draw-1,2026-10-20,7,final,alp,60,U/L
+alex-demo,draw-1,2026-10-20,8,final,wbc,5,10*3/uL
