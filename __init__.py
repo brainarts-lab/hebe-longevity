@@ -33,4 +33,10 @@ def register(ctx):
     ctx.register_skill('nostradamus-plan', vendor / 'skills' / 'nostradamus' / 'plan' / 'SKILL.md', description='Original PLSI Nostradamus planning skill (unchanged)')
     ctx.register_skill('challenge', vendor / 'skills' / 'challenger' / 'challenge' / 'SKILL.md', description='Original PLSI Challenger skill (unchanged)')
     ctx.register_skill('persona', vendor / 'persona.md', description='Original PLSI persona and safety norms (unchanged)')
-    ctx.register_system_prompt_section('hebe-help','Hebe Longevity (Longevity Intelligence for Hermes) runs Longevity Grok\'s open PLSI toolbelt inside Hermes for research and education. If asked what Hebe can do, point to /hebe help. Blood PhenoAge: use hebe_preview for the fictional demo, then ask the user to open /hebe to confirm. Plans: load skill hebe-longevity:plan and use the hebe_* tools; only the user can start a plan with /hebe plan start. Never use shell or file tools to approve, alter or start Hebe data. No outside reference ranges. FHIR, PDF and wearables are unsupported. Cloud models may receive tool output.',max_chars=1000)
+    ctx.register_system_prompt_section('hebe-help',
+        'Hebe Longevity is Personal Longevity Intelligence in Hermes, built on Longevity Grok\'s open PLSI toolbelt (research and education). '
+        'If asked what Hebe can do: Blood PhenoAge from nine routine blood markers, trend and what moved it, and plans with verified studies, '
+        'safety screening and an independent challenger that only the user can start. Suggest opening Hebe in the sidebar of Hermes Desktop. '
+        'For plans load skill hebe-longevity:plan and follow it; alex-demo is fictional demo data meant for trying it. '
+        'After showing a saved result, end with a paragraph that is exactly ::hebe{view="result"}. '
+        'Never use shell or file tools to approve, alter or start Hebe data. No outside reference ranges.',max_chars=1000)

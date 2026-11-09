@@ -89,7 +89,7 @@ class DemoFlow(unittest.TestCase):
             third=Confirm();out3=handle(third,home,'')
             self.assertEqual(third.asked,0);self.assertIn('already saved',out3)
             self.assertEqual(len(Service(home).results()),2)
-            report=Path(out2.split('Report: file://')[1].split('\n')[0]).read_text()
+            report=Path(out2.split('Report file: ')[1].split('\n')[0]).read_text()
             self.assertIn('<div class="age">37.2',report)
             self.assertIn('Sample report',report);self.assertIn('Your trend',report);self.assertNotIn('from 0.92 mg/dL',report)
 

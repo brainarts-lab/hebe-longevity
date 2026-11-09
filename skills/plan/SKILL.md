@@ -23,17 +23,24 @@ as PLSI and PLSI Nostradamus in one chat: talk to the user directly instead of s
 
 ## Steps
 
-1. `hebe_state` for the person. No confirmed draw: ask the user to run `/hebe` first.
-2. Gather and verify evidence as the original step 1 says. Cite only identifiers `hebe_evidence verify` resolved.
-   Present the graded options and let the user pick.
-3. Write one PlanInput exactly as the original step 2 (one no-action control, predictions on `blood_phenoage`
+1. Find the person. If the user names none, call `hebe_preview` with action `status` and use the only saved person,
+   or ask which one. `alex-demo` is a fictional demo person made for trying Hebe: plan for it right away, say once
+   that it is demo data, and never ask the user for real results first. No saved person at all: tell the user to
+   open **Hebe** in the sidebar (or enter `/hebe`) and try the demo.
+2. `hebe_state` for the person. Name the markers and the PhenoAge it shows before suggesting anything.
+3. Gather and verify evidence as the original step 1 says. Cite only identifiers `hebe_evidence verify` resolved.
+   Never cite web pages or anything you did not verify. Present 2 to 4 graded options and let the user pick.
+4. Write one PlanInput exactly as the original step 2 (one no-action control, predictions on `blood_phenoage`
    coordinates, expected values from `hebe_calc`).
-4. `hebe_plan_check`. Fix every Hebe gate problem and PLSI violation, then check again. Drug and supplement actions
+5. `hebe_plan_check`. Fix every Hebe gate problem and PLSI violation, then check again. Drug and supplement actions
    carry an RxNorm code and category `drug` or `supplement`; Hebe refuses a code under any other category.
-5. `hebe_challenge` with the plan_id. Answer each objection once: revise and check again, or rebut with a verified
+6. `hebe_challenge` with the plan_id. Answer each objection once: revise and check again, or rebut with a verified
    source. A revised plan gets a new plan_id; challenge that one.
-6. Show the user the plan, cautions, predictions and the challenger's verdict. Ask them to enter
-   `/hebe plan start PLAN_ID` (optionally a start date). Never claim a plan started before they confirm.
+7. Show the plan, cautions, predictions and the challenger's verdict in short bullets. Tell the user to start it on
+   the **Plans** tab of the Hebe page, or with `/hebe plan start PLAN_ID`. End with a paragraph that is exactly
+   `::hebe{view="plans"}`. Never claim a plan started before they confirm.
+
+Do not replace these steps with general health advice. If a tool fails, say which step failed and stop.
 
 ## Rules
 

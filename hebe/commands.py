@@ -61,7 +61,8 @@ def result_text(r,report,history=(),saved=None):
     return '\n'.join([
         f'Blood PhenoAge: {r["pheno_age"]:.1f} years',
         f'{describe_delta(r["delta"])} ({r["chrono_age"]:.1f})',*trend,'',
-        f'Report: {report.as_uri()}',
+        'Full report: open Hebe in the sidebar of Hermes Desktop',
+        f'Report file: {report}',
         f'Result ID: {r["id"]}','',
         'Next: ask in chat "What could I try to lower my Blood PhenoAge?" to draft a plan. /hebe help shows everything Hebe can do.','',
         DISCLAIMER])
@@ -87,6 +88,7 @@ WELCOME='\n'.join([
     '1. /hebe  try the fictional demo, or /hebe import "panel.csv" birth-year person-id for your own values',
     '2. Ask in chat: "What could I try to lower my Blood PhenoAge?"',
     '3. /hebe plan start PLAN_ID  only you can start a plan','',
+    'In Hermes Desktop, open Hebe in the sidebar: add results, see your report and start plans with a click.','',
     'More',
     '- /hebe status  saved results',
     '- /hebe report RESULT_ID  open a report',
@@ -160,7 +162,7 @@ def handle(ctx,home,raw):
         elif len(words)==2 and words[0]=='report':
             s=Service(home);html=s.report(words[1]);path=Path(home)/f'report-{words[1]}.html'
             write_report(path,html)
-            return f'Hebe Longevity report: {path.as_uri()}'
+            return f'Open Hebe in the sidebar of Hermes Desktop to see this report, or open the file: {path}'
         elif words and words[0]=='plan':return plan_command(ctx,home,words[1:])
         elif words==['help']:return WELCOME
         else:return USAGE+'\n/hebe help explains what Hebe does.'

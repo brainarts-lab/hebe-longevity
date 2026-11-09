@@ -24,10 +24,10 @@ Longevity Grok's open PLSI toolbelt, pinned and unchanged, running inside Hermes
 Requires Hermes >=0.23.0 (tested commit recorded in the project status). Needs PLSI's two Python packages (`pydantic`, `PyYAML`), which Hermes installs after asking. The PhenoAge demo needs no model or API key; plans use your configured Hermes model.
 
 ```sh
-hermes plugins install https://github.com/brainarts-studio/hebe-longevity --enable
+hermes plugins install https://github.com/brainarts-lab/hebe-longevity --enable
 ```
 
-The repository is currently private: your GitHub account needs access and Hermes must be able to authenticate Git. For a local checkout, install this directory using `hermes plugins install /absolute/path/to/hebe-longevity`. Enable `hebe-longevity` if your installer does not enable it, then start a new Hermes chat.
+Enable `hebe-longevity` if your installer does not enable it, then start a new Hermes chat. To install a local clone, pass it as a Git URL, for example `hermes plugins install file:///absolute/path/to/hebe-longevity`.
 
 Hermes asks two questions during install. **Python dependencies:** `pydantic` and `PyYAML`, PLSI's only requirements. **Security scan caution:** the scanner flags patterns in unchanged PLSI files, for example a variable named `env` in its formula engine and `pip install` hints in error messages. Review the list and continue if you trust the source. Headless installs answer with `--yes-deps --force`.
 
@@ -63,6 +63,16 @@ Ask Hebe in chat, for example "What could I try to lower my Blood PhenoAge?". Th
 | Screening and plan gates | `hebe_plan_check`: Hebe gate, then original `plsi screen` and `plsi plan check` |
 | PLSI Challenger | `hebe_challenge`: a separate Hermes model call (auxiliary task `hebe_challenger`, its own model if you configure one) that sees only the plan, state and screening, never the planner's reasoning |
 | Record and adopt | only the user: `/hebe plan start PLAN_ID [YYYY-MM-DD]` shows the plan, cautions and objections in a confirmation dialog |
+
+**Give the challenger a strong model.** Hermes runs auxiliary tasks on a light model by default (`auto`). For an independent check, pick a strong model, ideally from a different family than your chat model:
+
+```sh
+hermes config set auxiliary.hebe_challenger.provider nous
+hermes config set auxiliary.hebe_challenger.model anthropic/claude-opus-5.5
+hermes config set auxiliary.hebe_challenger.reasoning_effort high
+```
+
+Hermes may warn that the key is not recognized; plugin tasks are registered at runtime and the setting is read.
 
 `/hebe plan` lists recorded plans and drafts. A draft must be challenged before it can start. Cautions from screening are accepted by starting; a block cannot start.
 
