@@ -1,8 +1,10 @@
+<p align="center"><img src="assets/hebe-banner.svg" alt="Hebe: Longevity Intelligence for Hermes" width="100%"></p>
+
 # Hebe Longevity
 
 **Personal Longevity Intelligence for Hermes**
 
-How old is your blood? Hebe turns a routine blood test into your Blood PhenoAge, shows what moves it and helps you plan what to try next, with the open toolbelt behind Longevity Grok running inside your Hermes.
+Know your biological age. Hebe reads nine values from a routine blood test, calculates your Blood PhenoAge, shows what moved it and helps you plan what to try next, with the open toolbelt behind Longevity Grok running inside your Hermes.
 
 ### What you get
 
@@ -11,6 +13,8 @@ How old is your blood? Hebe turns a routine blood test into your Blood PhenoAge,
 - **Your trend** across blood draws and which values moved your result
 - **A plan to lower it**, built the Longevity Grok way: verified studies, safety screening, an independent challenger model, and a start that only you can approve
 - **One install.** Longevity Grok creates a team of bots; in Hermes the same roles run as skills in your agent, and your data stays in your Hermes home
+
+<p align="center"><img src="assets/hebe-flow.svg" alt="How Hebe works: add a blood test, see your Blood PhenoAge, get a plan, second opinion, you decide" width="100%"></p>
 
 ### What you do
 

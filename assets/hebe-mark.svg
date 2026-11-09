@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Hebe">
+  <defs><linearGradient id="hebe-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#19b39c"/><stop offset="1" stop-color="#0a6e63"/></linearGradient></defs>
+  <rect width="64" height="64" rx="15" fill="url(#hebe-g)"/>
+  <path d="M32 9c0 0-15 16.5-15 27a15 15 0 0 0 30 0C47 25.5 32 9 32 9z" fill="#fff"/>
+  <path d="M23.5 34.5c3 4 5.5 5.5 8.5 5.5s5.5-1.5 8.5-5.5" fill="none" stroke="#0d8576" stroke-width="3" stroke-linecap="round"/>
+  <path d="M32 40v6M27.5 46h9" stroke="#0d8576" stroke-width="3" stroke-linecap="round"/>
+</svg>

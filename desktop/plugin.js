@@ -26,7 +26,7 @@ font:15px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-seri
 .hb-wrap{max-width:1040px;margin:0 auto;padding:28px clamp(18px,4vw,48px) 56px}
 .hb-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:28px}
 .hb-brand{display:flex;align-items:center;gap:10px;font-weight:600;letter-spacing:-.01em}
-.hb-mark{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:var(--hb-accent);color:var(--ui-accent-foreground,#fff);font-size:15px;font-weight:700}
+.hb-mark{flex:none;display:block;border-radius:8px}
 .hb-brand small{display:block;font-size:12px;font-weight:500;color:var(--hb-faint);letter-spacing:0}
 .hb-pill{font-size:11px;color:var(--hb-muted);border:1px solid var(--hb-line);border-radius:999px;padding:4px 10px;white-space:nowrap}
 .hb-eyebrow{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--hb-accent)}
@@ -38,7 +38,7 @@ font:15px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-seri
 .hb-ssub{font-weight:600;margin-bottom:6px}
 .hb-sbar{display:grid;gap:5px}.hb-strack{height:7px;border-radius:99px;background:var(--hb-soft);overflow:hidden}.hb-strack div{height:100%;border-radius:99px}
 .hb-smove{border-top:1px solid var(--hb-line);padding-top:10px;margin-top:4px}
-.hb-hero h1{font-size:clamp(34px,5vw,52px);line-height:1.05;letter-spacing:-.035em;margin:10px 0 14px;font-weight:700}
+.hb-hero h1{text-wrap:balance;font-size:clamp(34px,5vw,52px);line-height:1.05;letter-spacing:-.035em;margin:10px 0 14px;font-weight:700}
 .hb-hero p{font-size:17px;color:var(--hb-muted);max-width:620px;margin:0 0 24px}
 .hb-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .hb-btn{border:1px solid var(--hb-line);background:var(--hb-card);border-radius:10px;padding:10px 16px;min-height:42px;cursor:pointer;font-weight:500;transition:transform .12s,background .12s}
@@ -150,6 +150,17 @@ function Footer({ disclaimer }) {
     h('div', null, 'Built on PLSI by Insilico Medicine (MIT), the open toolbelt behind Longevity Grok. Not affiliated with Insilico Medicine or xAI.'))
 }
 
+// Hebe's mark: a blood drop holding Hebe's cup, the Greek goddess of youth.
+function Mark({ size = 28 }) {
+  return h('svg', { width: size, height: size, viewBox: '0 0 64 64', 'aria-hidden': true, className: 'hb-mark' },
+    h('defs', null, h('linearGradient', { id: 'hebe-mark-g', x1: 0, y1: 0, x2: 1, y2: 1 },
+      h('stop', { offset: 0, stopColor: '#19b39c' }), h('stop', { offset: 1, stopColor: '#0a6e63' }))),
+    h('rect', { width: 64, height: 64, rx: 15, fill: 'url(#hebe-mark-g)' }),
+    h('path', { d: 'M32 9c0 0-15 16.5-15 27a15 15 0 0 0 30 0C47 25.5 32 9 32 9z', fill: '#fff' }),
+    h('path', { d: 'M23.5 34.5c3 4 5.5 5.5 8.5 5.5s5.5-1.5 8.5-5.5', fill: 'none', stroke: '#0d8576', strokeWidth: 3, strokeLinecap: 'round' }),
+    h('path', { d: 'M32 40v6M27.5 46h9', stroke: '#0d8576', strokeWidth: 3, strokeLinecap: 'round' }))
+}
+
 // What a result looks like, before the user has one. Values are the fictional demo person's.
 function Sample() {
   const bar = (label, value, pct, accent) => h('div', { className: 'hb-sbar' },
@@ -172,8 +183,8 @@ function Welcome({ ctx, start, importOwn, demo }) {
   return h(React.Fragment, null,
     h('div', { className: 'hb-herogrid' }, h('div', { className: 'hb-hero' },
       h('div', { className: 'hb-eyebrow' }, 'Blood PhenoAge for Hermes'),
-      h('h1', null, 'How old is your blood?'),
-      h('p', null, 'Hebe turns a routine blood test into your Blood PhenoAge, shows what moves it and helps you plan what to try next. It runs inside your Hermes, with the open toolbelt behind Longevity Grok.'),
+      h('h1', null, 'Know your biological age'),
+      h('p', null, 'Hebe reads nine values from a routine blood test, calculates your Blood PhenoAge, shows what moved it and helps you plan what to try next. It runs inside your Hermes, with the open toolbelt behind Longevity Grok.'),
       h('div', { className: 'hb-row' },
         demo && h('button', { type: 'button', className: 'hb-btn hb-primary', onClick: start }, 'Try it with demo data'),
         h('button', { type: 'button', className: 'hb-btn', onClick: importOwn }, 'Use my blood results'))),
@@ -443,7 +454,7 @@ function App({ ctx }) {
   return h('div', { className: 'hebe' }, h('style', null, CSS),
     h('div', { className: 'hb-wrap' },
       h('div', { className: 'hb-top' },
-        h('div', { className: 'hb-brand' }, h('span', { className: 'hb-mark', 'aria-hidden': true }, 'H'),
+        h('div', { className: 'hb-brand' }, h(Mark, { size: 30 }),
           h('div', null, 'Hebe', h('small', null, 'Personal Longevity Intelligence'))),
         h('span', { className: 'hb-pill' }, 'Research prototype')),
       flash && view === 'main' && h('div', { className: 'hb-banner hb-ok', role: 'status' }, flash),
@@ -459,7 +470,7 @@ function ChatCard({ ctx, view }) {
   const p = boot && boot.people[boot.people.length - 1]
   const open = () => host.navigate(PATH)
   return h('div', { className: 'hebe', style: { height: 'auto', overflow: 'visible' } }, h('style', null, CSS),
-    h('div', { className: 'hb-dcard' },
+    h('div', { className: 'hb-dcard' }, h(Mark, { size: 36 }),
       p ? h('div', null, h('div', { className: 'hb-big' }, one(p.latest.pheno_age), h('span', { style: { fontSize: 15, fontWeight: 500 } }, ' years')),
             h('div', { className: 'hb-note', style: { marginTop: 0 } }, `Blood PhenoAge, ${pretty(p.person_id)}, ${day(p.latest.measured_at)}`))
         : h('div', null, h('b', null, 'Hebe'), h('div', { className: 'hb-note', style: { marginTop: 0 } }, boot ? 'No blood results yet' : 'Loading…')),

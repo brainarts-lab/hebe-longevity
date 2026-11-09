@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 380" width="1280" height="380" role="img" aria-label="How Hebe works: add a blood test, see your Blood PhenoAge, get a plan, second opinion, you decide">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0a2724"/><stop offset="1" stop-color="#070d0d"/></linearGradient>
+    <linearGradient id="mk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#19b39c"/><stop offset="1" stop-color="#0a6e63"/></linearGradient>
+  </defs>
+  <style>text{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+  .n{font-size:15px;font-weight:700;fill:#0a2724}.t{font-size:21px;font-weight:700;fill:#f5f7f7}.d{font-size:15.5px;fill:#a7c2bd}
+  .k{font-size:14px;font-weight:600;letter-spacing:1.4px;fill:#5fe3cc}</style>
+  <rect width="1280" height="380" rx="28" fill="url(#bg)"/>
+  <text x="64" y="64" class="k">HOW HEBE WORKS</text>
+  <line x1="110" y1="128" x2="1102" y2="128" stroke="#5fe3cc" stroke-opacity=".35" stroke-width="2" stroke-dasharray="2 8" stroke-linecap="round"/>
+
+  <g transform="translate(64 0)">
+    <circle cx="46" cy="128" r="30" fill="url(#mk)"/>
+    <path d="M46 111c0 0-10 11-10 18a10 10 0 0 0 20 0c0-7-10-18-10-18z" fill="#fff"/>
+    <text x="0" y="200" class="t">Add a blood test</text>
+    <text x="0" y="230" class="d">Nine routine values,</text>
+    <text x="0" y="252" class="d">typed in or uploaded.</text>
+    <text x="0" y="274" class="d">You confirm each one</text>
+  </g>
+  <g transform="translate(296 0)">
+    <circle cx="46" cy="128" r="30" fill="url(#mk)"/>
+    <text x="46" y="135" font-size="19" font-weight="800" text-anchor="middle" fill="#fff">37.2</text>
+    <text x="0" y="200" class="t">See your PhenoAge</text>
+    <text x="0" y="230" class="d">Original formula, your</text>
+    <text x="0" y="252" class="d">trend and the values</text>
+    <text x="0" y="274" class="d">that moved it</text>
+  </g>
+  <g transform="translate(528 0)">
+    <circle cx="46" cy="128" r="30" fill="url(#mk)"/>
+    <path d="M35 118h22M35 128h22M35 138h14" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/>
+    <text x="0" y="200" class="t">Get a plan</text>
+    <text x="0" y="230" class="d">Ask in chat. Options</text>
+    <text x="0" y="252" class="d">from verified studies,</text>
+    <text x="0" y="274" class="d">screened for safety</text>
+  </g>
+  <g transform="translate(760 0)">
+    <circle cx="46" cy="128" r="30" fill="url(#mk)"/>
+    <path d="M46 112l13 5v9c0 8-6 13-13 16-7-3-13-8-13-16v-9z" fill="#fff"/>
+    <text x="0" y="200" class="t">Second opinion</text>
+    <text x="0" y="230" class="d">A different model</text>
+    <text x="0" y="252" class="d">challenges the plan</text>
+    <text x="0" y="274" class="d">before you see it</text>
+  </g>
+  <g transform="translate(992 0)">
+    <circle cx="46" cy="128" r="30" fill="url(#mk)"/>
+    <path d="M35 128l8 8 15-16" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="0" y="200" class="t">You decide</text>
+    <text x="0" y="230" class="d">Nothing starts without</text>
+    <text x="0" y="252" class="d">your click. Your next</text>
+    <text x="0" y="274" class="d">draw checks the result</text>
+  </g>
+  <text x="64" y="336" font-size="14" fill="#6f8a85">Runs inside your Hermes · your data stays in your Hermes home · research prototype, not a diagnosis</text>
+</svg>

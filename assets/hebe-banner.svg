@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640" role="img" aria-label="Hebe: Longevity Intelligence for Hermes">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0a2724"/><stop offset="1" stop-color="#070d0d"/></linearGradient>
+    <radialGradient id="glow" cx="0.78" cy="0.3" r="0.55"><stop offset="0" stop-color="#19b39c" stop-opacity=".32"/><stop offset="1" stop-color="#19b39c" stop-opacity="0"/></radialGradient>
+    <linearGradient id="mk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#19b39c"/><stop offset="1" stop-color="#0a6e63"/></linearGradient>
+    <linearGradient id="bar" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#19b39c"/><stop offset="1" stop-color="#5fe3cc"/></linearGradient>
+  </defs>
+  <style>text{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}</style>
+  <rect width="1280" height="640" fill="url(#bg)"/>
+  <rect width="1280" height="640" fill="url(#glow)"/>
+
+  <g transform="translate(88 112)">
+    <rect width="76" height="76" rx="18" fill="url(#mk)"/>
+    <g transform="scale(1.1875)">
+      <path d="M32 9c0 0-15 16.5-15 27a15 15 0 0 0 30 0C47 25.5 32 9 32 9z" fill="#fff"/>
+      <path d="M23.5 34.5c3 4 5.5 5.5 8.5 5.5s5.5-1.5 8.5-5.5" fill="none" stroke="#0d8576" stroke-width="3" stroke-linecap="round"/>
+      <path d="M32 40v6M27.5 46h9" stroke="#0d8576" stroke-width="3" stroke-linecap="round"/>
+    </g>
+  </g>
+  <text x="84" y="286" font-size="104" font-weight="700" letter-spacing="-4" fill="#f5f7f7">Hebe</text>
+  <text x="88" y="340" font-size="34" font-weight="600" letter-spacing="-.5" fill="#5fe3cc">Longevity Intelligence for Hermes</text>
+  <text x="88" y="398" font-size="22" fill="#a7c2bd">Your biological age from a routine blood test,</text>
+  <text x="88" y="430" font-size="22" fill="#a7c2bd">what moved it and a plan a second model checks</text>
+
+  <g font-size="17" font-weight="600" fill="#cfe9e4">
+    <rect x="88" y="482" width="168" height="40" rx="20" fill="#ffffff" fill-opacity=".07" stroke="#5fe3cc" stroke-opacity=".35"/>
+    <text x="172" y="508" text-anchor="middle">Blood PhenoAge</text>
+    <rect x="268" y="482" width="196" height="40" rx="20" fill="#ffffff" fill-opacity=".07" stroke="#5fe3cc" stroke-opacity=".35"/>
+    <text x="366" y="508" text-anchor="middle">Study-backed plans</text>
+    <rect x="476" y="482" width="196" height="40" rx="20" fill="#ffffff" fill-opacity=".07" stroke="#5fe3cc" stroke-opacity=".35"/>
+    <text x="574" y="508" text-anchor="middle">Data stays with you</text>
+  </g>
+
+  <g transform="translate(770 118)">
+    <rect width="420" height="404" rx="24" fill="#0f1b1a" stroke="#ffffff" stroke-opacity=".1"/>
+    <text x="32" y="50" font-size="16" font-weight="600" letter-spacing="1.5" fill="#5fe3cc">BLOOD PHENOAGE</text>
+    <rect x="300" y="30" width="88" height="28" rx="14" fill="#3a2e0c"/>
+    <text x="344" y="49" font-size="14" font-weight="600" text-anchor="middle" fill="#ffd66b">Demo data</text>
+    <text x="30" y="128" font-size="72" font-weight="700" letter-spacing="-3" fill="#f5f7f7">37.2<tspan dx="14" font-size="22" font-weight="400" letter-spacing="0" fill="#a7c2bd">years</tspan></text>
+    <text x="32" y="164" font-size="19" font-weight="600" fill="#5fe3cc">8.1 years younger than calendar age</text>
+
+    <text x="32" y="214" font-size="15" fill="#a7c2bd">Blood PhenoAge</text>
+    <text x="388" y="214" font-size="15" font-weight="600" text-anchor="end" fill="#f5f7f7">37.2</text>
+    <rect x="32" y="224" width="356" height="10" rx="5" fill="#ffffff" fill-opacity=".08"/>
+    <rect x="32" y="224" width="220" height="10" rx="5" fill="url(#bar)"/>
+    <text x="32" y="266" font-size="15" fill="#a7c2bd">Calendar age</text>
+    <text x="388" y="266" font-size="15" font-weight="600" text-anchor="end" fill="#f5f7f7">45.3</text>
+    <rect x="32" y="276" width="356" height="10" rx="5" fill="#ffffff" fill-opacity=".08"/>
+    <rect x="32" y="276" width="270" height="10" rx="5" fill="#636e6c"/>
+
+    <line x1="32" y1="314" x2="388" y2="314" stroke="#ffffff" stroke-opacity=".08"/>
+    <text x="32" y="346" font-size="15" fill="#a7c2bd">Plan</text>
+    <text x="32" y="372" font-size="16" font-weight="600" fill="#f5f7f7">2 studies verified · safety screened</text>
+    <circle cx="372" cy="356" r="14" fill="#19b39c"/>
+    <path d="M365 356l5 5 9-10" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
