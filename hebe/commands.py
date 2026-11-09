@@ -63,6 +63,7 @@ def result_text(r,report,history=(),saved=None):
         f'{describe_delta(r["delta"])} ({r["chrono_age"]:.1f})',*trend,'',
         f'Report: {report.as_uri()}',
         f'Result ID: {r["id"]}','',
+        'Next: ask in chat "What could I try to lower my Blood PhenoAge?" to draft a plan. /hebe help shows everything Hebe can do.','',
         DISCLAIMER])
 
 def next_demo(service):
@@ -73,7 +74,25 @@ def next_demo(service):
         if hashlib.sha256(data).hexdigest() not in saved:return data
     return None
 
-USAGE='Usage: /hebe [demo | status | import "file.csv" birth-year person-id | report result-id | plan [person-id] | plan start PLAN_ID [YYYY-MM-DD]]'
+USAGE='Usage: /hebe [help | demo | status | import "file.csv" birth-year person-id | report result-id | plan [person-id] | plan start PLAN_ID [YYYY-MM-DD]]'
+
+WELCOME='\n'.join([
+    'Hebe Longevity',
+    'Longevity Intelligence for Hermes','',
+    'What you get',
+    '- Your Blood PhenoAge from nine routine blood markers, with the original formula Longevity Grok uses',
+    '- Your trend across blood draws and which values moved your result',
+    '- A plan to lower it, built the Longevity Grok way: verified evidence, safety screening and an independent challenger','',
+    'What you do',
+    '1. /hebe  try the fictional demo, or /hebe import "panel.csv" birth-year person-id for your own values',
+    '2. Ask in chat: "What could I try to lower my Blood PhenoAge?"',
+    '3. /hebe plan start PLAN_ID  only you can start a plan','',
+    'More',
+    '- /hebe status  saved results',
+    '- /hebe report RESULT_ID  open a report',
+    '- /hebe plan  your plans and drafts','',
+    'Your data stays in your Hermes home. Your configured model sees what appears in chat.',
+    DISCLAIMER])
 
 def plan_command(ctx,home,words):
     from datetime import date
@@ -143,7 +162,8 @@ def handle(ctx,home,raw):
             write_report(path,html)
             return f'Hebe Longevity report: {path.as_uri()}'
         elif words and words[0]=='plan':return plan_command(ctx,home,words[1:])
-        else:return USAGE
+        elif words==['help']:return WELCOME
+        else:return USAGE+'\n/hebe help explains what Hebe does.'
         out=json.loads(prepare(home,args))
         if not out['ok']:return out['error']
         p=out['preview']

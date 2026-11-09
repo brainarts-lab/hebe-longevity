@@ -1,6 +1,6 @@
 name: hebe-longevity
 version: "0.4.0"
-description: "Blood PhenoAge, trend and Longevity Grok plans: the open PLSI toolbelt, pinned and unchanged, inside Hermes. Research prototype with fictional demo labs."
+description: "Longevity Intelligence for Hermes. Blood PhenoAge, trend and Longevity Grok plans: the open PLSI toolbelt, pinned and unchanged, inside Hermes. Research prototype with fictional demo labs."
 author: BrainArts
 license: MIT
 requires_hermes: ">=0.23.0"

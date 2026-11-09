@@ -1,12 +1,27 @@
 # Hebe Longevity
 
+**Longevity Intelligence for Hermes**
+
+### What you get
+
+- **Your Blood PhenoAge** from nine routine blood markers, calculated with the same original formula Longevity Grok uses
+- **Your trend** across blood draws and which values moved your result
+- **A plan to lower it**, built the Longevity Grok way: verified evidence, safety screening, an independent challenger and a start that only you can approve
+- **One install, one chat.** Longevity Grok creates a team of bots; on Hermes the same roles run as skills in your agent, and your data stays in your Hermes home
+
+### What you do
+
+1. `/hebe` to try the fictional demo, or `/hebe import` for your own values
+2. Ask in chat: "What could I try to lower my Blood PhenoAge?"
+3. `/hebe plan start PLAN_ID` to start a plan. `/hebe help` shows everything
+
 Longevity Grok's open PLSI toolbelt, pinned and unchanged, running inside Hermes. Confirm a blood panel, get a traceable blood PhenoAge, your trend and what moved it, then draft a screened plan that an independent challenger checks and only you can start.
 
 **Research prototype. Not a diagnosis or treatment recommendation.** No clinical validation is claimed. Built on PLSI by Insilico Medicine (MIT). Not affiliated with or endorsed by Insilico Medicine or xAI.
 
 ## Try it
 
-Requires Hermes >=0.23.0 (tested commit recorded in the project status). No additional Python packages, model subscription, API keys or profile package required for this demo.
+Requires Hermes >=0.23.0 (tested commit recorded in the project status). Needs PLSI's two Python packages (`pydantic`, `PyYAML`), which Hermes installs after asking. The PhenoAge demo needs no model or API key; plans use your configured Hermes model.
 
 ```sh
 hermes plugins install https://github.com/brainarts-studio/hebe-longevity --enable
@@ -36,7 +51,7 @@ Data lives under the active `HERMES_HOME/plugin-data/hebe-longevity/`, never the
 
 The model tool `hebe_preview` can prepare **fictional** demo data and list result identifiers. It cannot approve or commit. Real imports use the user command and confirmation dialog. Who may answer a dialog in a shared messenger session depends on Hermes and has not been tested. This permission split is not a sandbox against a separately enabled shell or other powerful tools.
 
-No network or model calls are made by this plugin. **Hermes itself may send chat/tool outputs to your configured cloud model.** The plugin does not enforce network isolation. Health data shown in reports and chat remains sensitive. Delete the plugin data directory yourself to remove stored results; there is no automatic retention policy for confirmed results.
+PhenoAge, trend and reports make no network or model calls. Plans do: evidence search contacts the public sources listed under Plans with topic queries only, and the challenger is a call to your configured model. **Hermes itself may send chat/tool outputs to your configured cloud model.** The plugin does not enforce network isolation. Health data shown in reports and chat remains sensitive. Delete the plugin data directory yourself to remove stored results; there is no automatic retention policy for confirmed results.
 
 ## Plans (Longevity Grok on Hermes)
 

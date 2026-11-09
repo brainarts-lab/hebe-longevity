@@ -12,7 +12,7 @@ def register(ctx):
     def home():return plugin_data_dir('hebe-longevity')
     def command(raw_args):return handle(ctx,home(),raw_args)
     def tool(args,**kwargs):return prepare(home(),args)
-    ctx.register_command('hebe',command,description='Hebe Longevity: blood PhenoAge, trend and PLSI plans',args_hint='demo | import | status | report | plan')
+    ctx.register_command('hebe',command,description='Hebe Longevity: Longevity Intelligence for Hermes',args_hint='help | demo | import | status | report | plan')
     ctx.register_tool(name='hebe_preview',toolset='hebe-longevity',description='Preview fictional demo labs or inspect saved result identifiers; never confirms or saves measurements.',
         schema={'name':'hebe_preview','description':'Prepare the fictional Hebe demo or list saved result identifiers. To approve and calculate, the user opens /hebe and confirms the dialog. Research only.',
                 'parameters':{'type':'object','properties':{'action':{'type':'string','enum':['demo','status']}},'required':['action'],'additionalProperties':False}},
@@ -33,4 +33,4 @@ def register(ctx):
     ctx.register_skill('nostradamus-plan', vendor / 'skills' / 'nostradamus' / 'plan' / 'SKILL.md', description='Original PLSI Nostradamus planning skill (unchanged)')
     ctx.register_skill('challenge', vendor / 'skills' / 'challenger' / 'challenge' / 'SKILL.md', description='Original PLSI Challenger skill (unchanged)')
     ctx.register_skill('persona', vendor / 'persona.md', description='Original PLSI persona and safety norms (unchanged)')
-    ctx.register_system_prompt_section('hebe-help','Hebe Longevity runs Longevity Grok\'s open PLSI toolbelt inside Hermes for research and education. Blood PhenoAge: use hebe_preview for the fictional demo, then ask the user to open /hebe to confirm. Plans: load skill hebe-longevity:plan and use the hebe_* tools; only the user can start a plan with /hebe plan start. Never use shell or file tools to approve, alter or start Hebe data. No outside reference ranges. FHIR, PDF and wearables are unsupported. Cloud models may receive tool output.',max_chars=1000)
+    ctx.register_system_prompt_section('hebe-help','Hebe Longevity (Longevity Intelligence for Hermes) runs Longevity Grok\'s open PLSI toolbelt inside Hermes for research and education. If asked what Hebe can do, point to /hebe help. Blood PhenoAge: use hebe_preview for the fictional demo, then ask the user to open /hebe to confirm. Plans: load skill hebe-longevity:plan and use the hebe_* tools; only the user can start a plan with /hebe plan start. Never use shell or file tools to approve, alter or start Hebe data. No outside reference ranges. FHIR, PDF and wearables are unsupported. Cloud models may receive tool output.',max_chars=1000)
