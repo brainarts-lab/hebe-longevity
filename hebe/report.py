@@ -220,7 +220,7 @@ def render(result, units, history=None):
 <ul class="group points">
 {next_point}
 <li><strong>Talk to your doctor</strong> about any value that worries you.</li>
-<li><strong>Coming later:</strong> which markers move your result most.</li>
+<li><strong>Ask Hebe for a plan:</strong> options backed by studies, screened for safety and checked by an independent challenger.</li>
 </ul></section>
 
 <details><summary>How it was calculated</summary><div class="inner">

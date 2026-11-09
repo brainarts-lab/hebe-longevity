@@ -57,5 +57,14 @@ class Page(unittest.TestCase):
         self.assertEqual(self.post('/preview', {'source': 'csv', 'csv': csv, 'person_id': 'me'}).status_code, 400)
         self.assertEqual(self.post('/preview', {'source': 'csv', 'csv': csv, 'birth_year': 1981, 'person_id': '../x'}).status_code, 400)
 
+    def test_typed_values_in_lab_units_preview_with_conversions(self):
+        rows = [('albumin', '4.4', 'g/dL'), ('creatinine', '0.9', 'mg/dL'), ('glucose', '90', 'mg/dL'), ('crp', '1', 'mg/L'),
+                ('lymphocyte_pct', '30', '%'), ('mcv', '90', 'fL'), ('rdw', '13', '%'), ('alp', '60', 'U/L'), ('wbc', '5', '10*9/L')]
+        csv = 'person_id,draw_id,collected_at,observation_id,status,marker,value,unit\n' + ''.join(
+            f'me,draw-2026-10-01,2026-10-01,m{i},final,{m},{v},{u}\n' for i, (m, v, u) in enumerate(rows))
+        p = self.post('/preview', {'source': 'csv', 'csv': csv, 'birth_year': 1980, 'person_id': 'me'}).json()
+        self.assertEqual(len(p['markers']), 9); self.assertGreaterEqual(p['conversions'], 4)
+        self.assertEqual(self.c.get('/api/template').json()['csv'].splitlines()[1].split(',')[0], 'me')
+
 
 if __name__ == '__main__': unittest.main()

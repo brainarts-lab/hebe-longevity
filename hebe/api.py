@@ -22,9 +22,17 @@ from .plsi_bridge import PlsiError
 from .report import marker_name, unit_label
 from .service import Service, DEMO_BIRTH_YEAR, DEMO_PERSON, DISCLAIMER, ID
 
-EMBED = ('<script>(function(){function s(){parent.postMessage({type:"hebe-height",'
-         'h:document.documentElement.scrollHeight},"*")}addEventListener("load",s);'
-         'new ResizeObserver(s).observe(document.documentElement)})()</script>')
+EMBED = ('<script>(function(){function s(){var m=document.querySelector("main");if(!innerWidth)return;'
+         'parent.postMessage({type:"hebe-height",h:Math.ceil(m.getBoundingClientRect().bottom)+8},"*")}'
+         'addEventListener("load",s);new ResizeObserver(s).observe(document.querySelector("main"));'
+         '[100,500,1500].forEach(function(t){setTimeout(s,t)})})()</script>')
+# Inside the Hebe page: follow the app's light or dark theme, drop the report's own header and background.
+EMBED_THEME = {
+    'light': ':root{--bg:transparent;--surface:#ffffff;--ink:#1d1d1f;--muted:#6e6e73;--faint:#8e8e93;--line:#e5e5ea;'
+             '--accent:#0a8f7f;--track:#ececf1;--calendar:#aeaeb2;--demo:#fff4d6;--demo-ink:#7a5600;color-scheme:light}',
+    'dark': ':root{--bg:transparent;--surface:#1c1c1e;--ink:#f5f5f7;--muted:#a1a1a6;--faint:#8e8e93;--line:#2c2c2e;'
+            '--accent:#30d1b8;--track:#2c2c2e;--calendar:#636366;--demo:#3a2e0c;--demo-ink:#ffd66b;color-scheme:dark}'}
+EMBED_LAYOUT = 'html,body{background:transparent}.top,main>footer{display:none}main{max-width:none;padding:0 0 8px}'
 ORDER = ('albumin', 'creatinine', 'glucose', 'crp', 'lymphocyte_pct', 'mcv', 'rdw', 'alp', 'wbc')
 
 
@@ -156,6 +164,15 @@ def create_router(home_provider):
             return {'people': _people(s), 'demo_available': next_demo(s) is not None, 'disclaimer': DISCLAIMER}
         return call(read)
 
+    @router.get('/template')
+    def template():
+        def read():
+            from .commands import ROOT
+            rows = (ROOT / 'data' / 'demo.csv').read_text().splitlines()
+            # Same columns and markers as the demo, with the person renamed so the user only edits values and dates.
+            return {'csv': '\n'.join([rows[0]] + [r.replace(DEMO_PERSON, 'me', 1) for r in rows[1:]]) + '\n'}
+        return call(read)
+
     @router.post('/preview')
     def preview(body: PreviewIn):
         def run():
@@ -206,13 +223,14 @@ def create_router(home_provider):
         return call(lambda: (service().discard(body.id), {'ok': True})[1])
 
     @router.get('/report/{result_id}')
-    def report(result_id: str, embed: int = 0):
+    def report(result_id: str, embed: int = 0, theme: str = 'light'):
         def run():
             if not re.fullmatch('[0-9a-f]{64}', result_id):
                 raise ValueError('Unknown result.')
             html = service().report(result_id)
             if embed:  # inside the Hebe page the report reports its height, so the page scrolls once
-                html = html.replace('</body>', EMBED + '</body>', 1)
+                css = EMBED_THEME.get(theme, EMBED_THEME['light']) + EMBED_LAYOUT
+                html = html.replace('</head>', '<style>' + css + '</style></head>', 1).replace('</body>', EMBED + '</body>', 1)
             return {'html': html}
         return call(run)
 
