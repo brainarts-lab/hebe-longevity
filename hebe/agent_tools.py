@@ -2,6 +2,7 @@
 import json
 import re
 import sqlite3
+import time
 
 from .plans import Plans
 from .plsi_bridge import Plsi, PlsiError
@@ -23,6 +24,17 @@ def _person(args):
     return person
 
 
+def _evidence(plsi, *cmd):
+    """Public sources rate-limit bursts (HTTP 429). Wait and retry twice before giving up."""
+    for wait in (2, 5, None):
+        try:
+            return plsi.run(*cmd)
+        except PlsiError as error:
+            if wait is None or not re.search(r'\b429\b|rate.?limit|too many requests', str(error), re.I):
+                raise
+            time.sleep(wait)
+
+
 def run_tool(name, home, args, llm=None):
     try:
         if not isinstance(args, dict):
@@ -35,13 +47,13 @@ def run_tool(name, home, args, llm=None):
                 if args.get('source') not in EVIDENCE_SOURCES or not isinstance(args.get('query'), str):
                     raise ValueError(f'search needs source in {EVIDENCE_SOURCES} and a query.')
                 limit = min(max(int(args.get('limit', 10)), 1), 20)
-                return _ok(result=plsi.run('evidence', 'search', '--source', args['source'], '--query',
+                return _ok(result=_evidence(plsi, 'evidence', 'search', '--source', args['source'], '--query',
                                            args['query'][:300], '--limit', limit))
             if args.get('action') == 'verify':
                 if args.get('kind') not in EVIDENCE_KINDS or not isinstance(args.get('id'), str) \
                         or not re.fullmatch(r'[A-Za-z0-9./_:()-]{1,200}', args['id']):
                     raise ValueError(f'verify needs kind in {EVIDENCE_KINDS} and an identifier.')
-                return _ok(result=plsi.run('evidence', 'verify', '--kind', args['kind'], '--id', args['id']))
+                return _ok(result=_evidence(plsi, 'evidence', 'verify', '--kind', args['kind'], '--id', args['id']))
             raise ValueError('action must be search or verify.')
         if name == 'hebe_calc':
             person = _person(args)

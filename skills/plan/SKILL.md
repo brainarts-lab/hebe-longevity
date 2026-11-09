@@ -40,7 +40,8 @@ as PLSI and PLSI Nostradamus in one chat: talk to the user directly instead of s
    the **Plans** tab of the Hebe page, or with `/hebe plan start PLAN_ID`. End with a paragraph that is exactly
    `::hebe{view="plans"}`. Never claim a plan started before they confirm.
 
-Do not replace these steps with general health advice. If a tool fails, say which step failed and stop.
+Do not replace these steps with general health advice. If one evidence source fails or is rate limited, use another
+(`europepmc` instead of `pubmed`) and search one topic at a time. If another tool fails, say which step failed and stop.
 
 ## Rules
 

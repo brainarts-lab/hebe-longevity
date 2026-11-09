@@ -126,4 +126,25 @@ class Vendor(unittest.TestCase):
             self.assertEqual(hashlib.sha256((base / name).read_bytes()).hexdigest(), digest, name)
 
 
+
+
+
+class Evidence(unittest.TestCase):
+    def test_rate_limited_search_is_retried_then_other_errors_pass_through(self):
+        from unittest import mock
+        import hebe.agent_tools as tools
+        calls = []
+        def run(self, *args):
+            calls.append(args)
+            if len(calls) == 1: raise PlsiError('PLSI refused: pubmed HTTP 429')
+            return {'hits': []}
+        with tempfile.TemporaryDirectory() as home, mock.patch.object(Plsi, 'run', run), mock.patch.object(tools.time, 'sleep'):
+            out = json.loads(run_tool('hebe_evidence', home, {'action': 'search', 'source': 'pubmed', 'query': 'mediterranean diet crp'}))
+            self.assertTrue(out['ok']); self.assertEqual(len(calls), 2)
+        def broken(self, *args): raise PlsiError('PLSI refused: bad query')
+        with tempfile.TemporaryDirectory() as home, mock.patch.object(Plsi, 'run', broken):
+            out = json.loads(run_tool('hebe_evidence', home, {'action': 'search', 'source': 'pubmed', 'query': 'x'}))
+            self.assertFalse(out['ok'])
+
+
 if __name__ == '__main__': unittest.main()
