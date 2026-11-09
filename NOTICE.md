@@ -8,6 +8,6 @@ PLSI v0.2.1, commit `17c433c4a9ecb54279ab02ba1d7d63ee8e8a2e81`, https://github.c
 
 `hebe/plsi_units.py` is PLSI's `src/plsi/map/units.py` unchanged except for removing one import used only in type annotations. The two sourced unit conversions are copied from `maps/blood_phenoage.yaml`. Hashes are in `vendor/provenance.json`.
 
-This is selective reuse of the numerical kernel, not the complete PLSI runtime. The first prototype uses its own import, approval and storage contract. No claim is made to support PLSI plan/scoring or to fix its FHIR importer. The full upstream disclaimer is retained in `vendor/DISCLAIMER.md`. No UN life tables, LOINC datasets or methylation clocks are redistributed in this milestone.
+`vendor/plsi` bundles a byte-identical subset of PLSI at the same commit (toolbelt source, maps, contracts, references, the Nostradamus and Challenger skills, persona, license and disclaimer). `vendor/plsi.manifest.json` lists every file with its hash and the one file left out (`src/plsi/mh_caution.py`, imported by no PLSI module). Hebe runs this toolbelt for state, calculators, evidence, screening and plan gates; it adds its own import, approval and storage contract in front. No claim is made to fix PLSI's FHIR importer. The full upstream disclaimer is retained in `vendor/DISCLAIMER.md`. No UN life tables, LOINC datasets or methylation clocks are redistributed in this milestone.
 
 Hebe original code: Copyright (c) 2026 BrainArts, MIT.

@@ -1,8 +1,17 @@
 name: hebe-longevity
-version: "0.3.0"
-description: "Review a blood panel and calculate traceable blood PhenoAge locally. Research prototype with fictional demo labs."
+version: "0.4.0"
+description: "Blood PhenoAge, trend and Longevity Grok plans: the open PLSI toolbelt, pinned and unchanged, inside Hermes. Research prototype with fictional demo labs."
 author: BrainArts
 license: MIT
 requires_hermes: ">=0.23.0"
 provides_tools:
   - hebe_preview
+  - hebe_state
+  - hebe_evidence
+  - hebe_calc
+  - hebe_plan_check
+  - hebe_challenge
+  - hebe_plans
+python_dependencies:
+  - "pydantic>=2"
+  - "PyYAML"

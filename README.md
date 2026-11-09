@@ -1,6 +1,6 @@
 # Hebe Longevity
 
-Your local blood PhenoAge workbench for Hermes. Review the inputs, confirm the exact snapshot, get a traceable calculation and a local HTML report.
+Longevity Grok's open PLSI toolbelt, pinned and unchanged, running inside Hermes. Confirm a blood panel, get a traceable blood PhenoAge, your trend and what moved it, then draft a screened plan that an independent challenger checks and only you can start.
 
 **Research prototype. Not a diagnosis or treatment recommendation.** No clinical validation is claimed. Built on PLSI by Insilico Medicine (MIT). Not affiliated with or endorsed by Insilico Medicine or xAI.
 
@@ -9,10 +9,12 @@ Your local blood PhenoAge workbench for Hermes. Review the inputs, confirm the e
 Requires Hermes >=0.23.0 (tested commit recorded in the project status). No additional Python packages, model subscription, API keys or profile package required for this demo.
 
 ```sh
-hermes plugins install https://github.com/brainarts-studio/hebe-longevity
+hermes plugins install https://github.com/brainarts-studio/hebe-longevity --enable
 ```
 
 The repository is currently private: your GitHub account needs access and Hermes must be able to authenticate Git. For a local checkout, install this directory using `hermes plugins install /absolute/path/to/hebe-longevity`. Enable `hebe-longevity` if your installer does not enable it, then start a new Hermes chat.
+
+Hermes asks two questions during install. **Python dependencies:** `pydantic` and `PyYAML`, PLSI's only requirements. **Security scan caution:** the scanner flags patterns in unchanged PLSI files, for example a variable named `env` in its formula engine and `pip install` hints in error messages. Review the list and continue if you trust the source. Headless installs answer with `--yes-deps --force`.
 
 Enter **`/hebe`**. Review the fictional Alex Demo panel and select **Save and calculate**. Hebe returns blood PhenoAge and a local report link. Enter `/hebe` a second time to add an earlier fictional draw in typical lab units (mg/dL, g/dL, 10\*9/L); the report then shows your trend and what moved your result. This requires a Hermes surface supporting plugin confirmation dialogs; if no dialog is available, nothing is committed. Report links point to the machine running Hermes; remote messenger clients may not open them.
 
@@ -36,13 +38,30 @@ The model tool `hebe_preview` can prepare **fictional** demo data and list resul
 
 No network or model calls are made by this plugin. **Hermes itself may send chat/tool outputs to your configured cloud model.** The plugin does not enforce network isolation. Health data shown in reports and chat remains sensitive. Delete the plugin data directory yourself to remove stored results; there is no automatic retention policy for confirmed results.
 
+## Plans (Longevity Grok on Hermes)
+
+Ask Hebe in chat, for example "What could I try to lower my Blood PhenoAge?". The agent loads `hebe-longevity:plan`, which follows PLSI's original Nostradamus planning skill (bundled unchanged as `hebe-longevity:nostradamus-plan`) with Hermes tools instead of a shell:
+
+| PLSI step | In Hebe |
+|---|---|
+| State, calculators, evidence | `hebe_state`, `hebe_calc`, `hebe_evidence` run the original `plsi` commands |
+| Screening and plan gates | `hebe_plan_check`: Hebe gate, then original `plsi screen` and `plsi plan check` |
+| PLSI Challenger | `hebe_challenge`: a separate Hermes model call (auxiliary task `hebe_challenger`, its own model if you configure one) that sees only the plan, state and screening, never the planner's reasoning |
+| Record and adopt | only the user: `/hebe plan start PLAN_ID [YYYY-MM-DD]` shows the plan, cautions and objections in a confirmation dialog |
+
+`/hebe plan` lists recorded plans and drafts. A draft must be challenged before it can start. Cautions from screening are accepted by starting; a block cannot start.
+
+**Hebe gate.** PLSI screens drugs and supplements by label only when the action's category is `drug` or `supplement`. We reproduced that an RxNorm-coded action filed under `other` passes PLSI screening and plan check without any label check. Hebe refuses such a plan before PLSI sees it.
+
+The toolbelt runs as a child process of Hermes' own Python with an allowlist of commands, argument lists only (no shell), and its data under the plugin data directory. Evidence search and verification contact PubMed, Europe PMC, ClinicalTrials.gov, openFDA or Evipedia with topic queries only. PLSI's Mothership sharing, feedback, oracles, research autopilot and other commands are not reachable.
+
 ## Supported now
 
-Strict CSV review, documented unit conversions, two fictional demo draws, user confirmation, native command/tool, blood PhenoAge, trend across draws, formula drivers between draws, input provenance and HTML report.
+Strict CSV review, PLSI unit handling, two fictional demo draws, user confirmation, blood PhenoAge, trend across draws, formula drivers between draws, HTML report, PLSI evidence search and verification, PLSI screening and plan gates, independent challenger, user-only plan start, PLSI plan list and due predictions.
 
-**Unsupported:** FHIR, PDF/photo extraction, wearables, medication/supplement advice, plans/scoring, counterfactual forecasts, a dashboard tab, DE translation and an offline security boundary. Rejecting FHIR does not repair the upstream FHIR importer.
+**Unsupported:** FHIR, PDF/photo extraction, wearables, maps other than blood PhenoAge, care context (medications, conditions) for screening, PLSI specialists beyond Nostradamus and Challenger, plan review and scoring commands, Mothership sharing, a dashboard tab and an offline security boundary. Rejecting FHIR does not repair the upstream FHIR importer.
 
-The first milestone selectively vendors unchanged PLSI numerical definitions instead of installing the incomplete upstream wheel. No PLSI executable extensions, relay, automatic updates or specialist skills are included. See `NOTICE.md` and `vendor/provenance.json`.
+A subset of PLSI at commit `17c433c4a9ecb54279ab02ba1d7d63ee8e8a2e81` is bundled byte-for-byte under `vendor/plsi` (hashes in `vendor/plsi.manifest.json`; one unused file left out and listed there). No automatic updates. See `NOTICE.md`.
 
 ## Development
 
@@ -52,4 +71,4 @@ hermes plugins validate . --install-deps --json
 hermes plugins doctor . --ci
 ```
 
-Uses the Python standard library only. The broader project contains a real Hermes discovery/dispatch smoke test. No full live human-dialog or browser verification has yet been claimed.
+Hebe's own code uses the standard library; the bundled PLSI toolbelt needs pydantic and PyYAML. The broader project contains a real Hermes install and dispatch smoke test. No full live human-dialog or browser verification has yet been claimed.

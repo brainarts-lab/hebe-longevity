@@ -73,6 +73,41 @@ def next_demo(service):
         if hashlib.sha256(data).hexdigest() not in saved:return data
     return None
 
+USAGE='Usage: /hebe [demo | status | import "file.csv" birth-year person-id | report result-id | plan [person-id] | plan start PLAN_ID [YYYY-MM-DD]]'
+
+def plan_command(ctx,home,words):
+    from datetime import date
+    from .plans import Plans
+    from .plsi_bridge import PlsiError
+    plans=Plans(home)
+    try:
+        if len(words)<=1:
+            people=[words[0]] if words else sorted({r['person_id'] for r in Service(home).results()})
+            if not people:return 'No saved results yet. Enter /hebe to try the demo.'
+            lines=[]
+            for person in people:
+                o=plans.overview(person);entries=[]
+                listed=o['plans'] if isinstance(o['plans'],list) else o['plans'].get('plans',[])
+                for p in listed:
+                    entries.append(f'- {p["plan_id"]}: {p["state"]}, starts {p.get("start") or "not set"}, review {p.get("review_at") or "not set"}')
+                for d in o['drafts']:
+                    if not d['started_as']:
+                        entries.append(f'- Draft {d["id"][:12]}: {"challenged" if d["challenged"] else "not challenged yet"}. Start it with /hebe plan start {d["id"][:12]}')
+                lines+=[person,*(entries or ['- No plans yet. Ask Hebe in chat to draft one.']),'']
+            return '\n'.join(lines)
+        if words[0]!='start' or len(words) not in (2,3):return USAGE
+        start_on=words[2] if len(words)==3 else date.today().isoformat()
+        date.fromisoformat(start_on)
+        key,body,recorded,text=plans.summary(words[1])
+        if recorded:return f'This plan already started as {recorded}.'
+        answer=ctx.ask_choice(f'Start this plan on {start_on}?\n\n{text}\n\nStarting records the plan and its predictions in PLSI. '
+                              f'Cautions from screening are accepted by starting. Talk to your clinician before changing medication, supplements or routines.\n\n{DISCLAIMER}',
+                              [{'value':'start','label':'Start plan'},{'value':'cancel','label':'Not yet'}])
+        if answer!='start':return 'Not started. The draft is kept; nothing was recorded.'
+        out=plans.start(key,start_on)
+        return f'Plan started as {out["plan_id"]} on {start_on}. See the review date with /hebe plan. Scoring predictions against your next blood draw is not available in Hebe yet.'
+    except (ValueError,PlsiError) as error:return f'Not started: {error}'
+
 def prepare(home,args):
     try:
         if not isinstance(args,dict):raise ValueError('Expected structured arguments.')
@@ -107,7 +142,8 @@ def handle(ctx,home,raw):
             s=Service(home);html=s.report(words[1]);path=Path(home)/f'report-{words[1]}.html'
             write_report(path,html)
             return f'Hebe Longevity report: {path.as_uri()}'
-        else:return 'Usage: /hebe [demo | status | import "file.csv" birth-year person-id | report result-id]'
+        elif words and words[0]=='plan':return plan_command(ctx,home,words[1:])
+        else:return USAGE
         out=json.loads(prepare(home,args))
         if not out['ok']:return out['error']
         p=out['preview']
