@@ -2,7 +2,6 @@
 import csv
 from datetime import date, datetime, timezone
 import hashlib
-import html
 import io
 import json
 import math
@@ -136,13 +135,5 @@ class Service:
     def report(self,key):
         result=next((r for r in self.results() if r['id']==key),None)
         if result is None:raise ValueError('Unknown result.')
-        e=lambda v:html.escape(str(v))
-        rows=''.join(f'<tr><td>{e(m)}</td><td>{e(v)}</td><td>{e(UNITS[m])}</td></tr>' for m,v in result['values'].items())
-        return ('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width">'
-                '<title>Hebe Longevity</title><style>body{font:18px system-ui;max-width:850px;margin:40px auto;padding:20px;color:#183442;background:white}h1{color:#087f78}td{padding:8px;border-bottom:1px solid #ddd}.age{font-size:48px;color:#087f78}</style>'
-                f'<h1>Hebe Longevity</h1><p>{e(DISCLAIMER)}</p><h2>Blood PhenoAge</h2><p class="age">{result["pheno_age"]:.1f} years</p>'
-                f'<p>Approximate chronological age at collection: {result["chrono_age"]:.1f}. Birth year uses the upstream mid-year approximation.</p>'
-                f'<p>Person: {e(result["person_id"])} · Draw: {e(result["draw_id"])} · {e(result["measured_at"])}</p>'
-                f'<table><caption>Inputs in canonical units</caption><tr><th>Marker</th><th>Value</th><th>Unit</th></tr>{rows}</table>'
-                f'<p>Input SHA-256: {e(result["source_sha256"])}</p><p>PLSI commit: {PIN}</p>'
-                '<p>Built on PLSI by Insilico Medicine (MIT). Not affiliated with or endorsed by Insilico Medicine or xAI.</p></html>')
+        from .report import render
+        return render(result, UNITS)
