@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 64 64" role="img" aria-label="Hebe">
-<defs><linearGradient id="mark-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE680"/><stop offset=".4" stop-color="#FFD700"/><stop offset=".72" stop-color="#FFBF00"/><stop offset="1" stop-color="#CD7F32"/></linearGradient></defs>
-<rect width="64" height="64" rx="14" fill="#0d0c0a"/><circle cx="32" cy="32" r="27" fill="none" stroke="url(#mark-g)" stroke-width="1.6" opacity=".6"/><g>
-<path d="M32 10.5c0 0-6.2 7.4-6.2 11.2a6.2 6.2 0 0 0 12.4 0c0-3.8-6.2-11.2-6.2-11.2z" fill="url(#mark-g)"/>
-<path d="M12.5 30.5h39c-1.2 8.2-9 12.6-19.5 12.6S13.7 38.7 12.5 30.5z" fill="url(#mark-g)"/>
-<path d="M13.2 32.6c-4.6-.4-5.6-5.3-1.6-6.1M50.8 32.6c4.6-.4 5.6-5.3 1.6-6.1" fill="none" stroke="url(#mark-g)" stroke-width="2.2" stroke-linecap="round"/>
-<path d="M32 43v5.5M25.5 50.5h13" stroke="url(#mark-g)" stroke-width="3" stroke-linecap="round"/></g></svg>

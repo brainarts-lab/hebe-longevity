@@ -3,7 +3,7 @@
   "label": "Hebe",
   "description": "Personal Longevity Intelligence: Blood PhenoAge, trend and Longevity Grok plans.",
   "icon": "HeartPulse",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "tab": {"hidden": true},
   "api": "plugin_api.py"
 }

@@ -29,11 +29,11 @@ EMBED = ('<script>(function(){function s(){var m=document.querySelector("main");
 # Inside the Hebe page: follow the app's light or dark theme, drop the report's own header and background.
 EMBED_THEME = {
     'light': ':root{--bg:transparent;--surface:#ffffff;--ink:#1f1a12;--muted:#6f6553;--faint:#8d846f;--line:#ece4d2;'
-             '--accent:#8B6508;--fillg:linear-gradient(90deg,#B8860B,#8B6508);--track:#f1ead9;--calendar:#c9bfa9;'
-             '--demo:#fbf1d6;--demo-ink:#6e4f00;color-scheme:light}',
-    'dark': ':root{--bg:transparent;--surface:#15130f;--ink:#ece6d8;--muted:#a39a88;--faint:#8a8170;--line:#2b261d;'
-            '--accent:#FFD700;--fillg:linear-gradient(90deg,#CD7F32,#FFBF00 55%,#FFD700);--track:#2b261d;--calendar:#5f574a;'
-            '--demo:#2a2210;--demo-ink:#FFD700;color-scheme:dark}'}
+             '--accent:#8A6A3F;--fillg:linear-gradient(90deg,#B08A5B,#8A6A3F);--track:#f1ead9;--calendar:#c9bfa9;'
+             '--demo:#f3ead8;--demo-ink:#5e4526;color-scheme:light}',
+    'dark': ':root{--bg:transparent;--surface:#141210;--ink:#ece3d2;--muted:#a39a88;--faint:#8a8170;--line:#2b261d;'
+            '--accent:#DEB88A;--fillg:linear-gradient(90deg,#7C603F,#B08A5B 50%,#DEB88A);--track:#2b261d;--calendar:#5f574a;'
+            '--demo:#1d1810;--demo-ink:#DEB88A;color-scheme:dark}'}
 EMBED_LAYOUT = 'html,body{background:transparent}.top,main>footer{display:none}main{max-width:none;padding:0 0 8px}'
 ORDER = ('albumin', 'creatinine', 'glucose', 'crp', 'lymphocyte_pct', 'mcv', 'rdw', 'alp', 'wbc')
 
