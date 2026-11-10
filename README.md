@@ -1,4 +1,4 @@
-<p align="center"><img src="assets/hebe-banner.svg" alt="Hebe: Longevity Intelligence for Hermes" width="100%"></p>
+<p align="center"><img src="assets/hebe-banner.png" alt="Hebe: Longevity Intelligence for Hermes. Know your biological age" width="100%"></p>
 
 # Hebe Longevity
 
@@ -12,9 +12,10 @@ Know your biological age. Hebe reads nine values from a routine blood test, calc
 - **Your Blood PhenoAge** from nine routine blood markers, calculated with the same original formula Longevity Grok uses
 - **Your trend** across blood draws and which values moved your result
 - **A plan to lower it**, built the Longevity Grok way: verified studies, safety screening, an independent challenger model, and a start that only you can approve
+- **A Hebe theme for Hermes.** Ink and gold for the whole app, offered on the Hebe page and in Settings > Appearance. It is never switched on for you, and the Hebe page offers the way back
 - **One install.** Longevity Grok creates a team of bots; in Hermes the same roles run as skills in your agent, and your data stays in your Hermes home
 
-<p align="center"><img src="assets/hebe-flow.svg" alt="How Hebe works: add a blood test, see your Blood PhenoAge, get a plan, second opinion, you decide" width="100%"></p>
+<p align="center"><img src="assets/hebe-flow.png" alt="How Hebe works: add a blood test, see your Blood PhenoAge, get a plan, second opinion, you decide" width="100%"></p>
 
 ### What you do
 
@@ -60,7 +61,7 @@ Data lives under the active `HERMES_HOME/plugin-data/hebe-longevity/`, never the
 
 The model tool `hebe_preview` can prepare **fictional** demo data and list result identifiers. It cannot approve or commit. Real imports use the user command and confirmation dialog. Who may answer a dialog in a shared messenger session depends on Hermes and has not been tested. This permission split is not a sandbox against a separately enabled shell or other powerful tools.
 
-PhenoAge, trend and reports make no network or model calls. Plans do: evidence search contacts the public sources listed under Plans with topic queries only, and the challenger is a call to your configured model. **Hermes itself may send chat/tool outputs to your configured cloud model.** The plugin does not enforce network isolation. Health data shown in reports and chat remains sensitive. Delete the plugin data directory yourself to remove stored results; there is no automatic retention policy for confirmed results.
+PhenoAge, trend and reports make no network or model calls. The Hebe page in Desktop loads its display fonts (Cinzel, Cormorant Garamond, JetBrains Mono) from Google Fonts, like several built-in Hermes themes do; that request carries no health data, and the page falls back to system fonts when it is offline. Plans do: evidence search contacts the public sources listed under Plans with topic queries only, and the challenger is a call to your configured model. **Hermes itself may send chat/tool outputs to your configured cloud model.** The plugin does not enforce network isolation. Health data shown in reports and chat remains sensitive. Delete the plugin data directory yourself to remove stored results; there is no automatic retention policy for confirmed results.
 
 ## Plans (Longevity Grok on Hermes)
 

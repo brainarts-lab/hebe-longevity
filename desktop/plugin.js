@@ -2,8 +2,8 @@
 // Saving a draw and starting a plan always need the user's click here; the agent cannot reach these routes.
 import React from 'react'
 import {
-  host, useValue, writeClipboardText, SandboxedFrame,
-  ROUTES_AREA, SIDEBAR_NAV_AREA, PALETTE_AREA, TRANSCRIPT_DIRECTIVE_AREA
+  host, useValue, useTheme, writeClipboardText, SandboxedFrame,
+  ROUTES_AREA, SIDEBAR_NAV_AREA, PALETTE_AREA, TRANSCRIPT_DIRECTIVE_AREA, THEMES_AREA
 } from '@hermes/plugin-sdk'
 
 const h = React.createElement
@@ -15,66 +15,88 @@ const ASK = [
   'What does Blood PhenoAge measure, and what does it not?'
 ]
 
-const CSS = `
-.hebe{--hb-accent:var(--ui-accent,#0a84ff);--hb-text:var(--ui-text-primary,inherit);--hb-muted:var(--ui-text-secondary,#6e6e73);
+const FONTS = 'https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=JetBrains+Mono:wght@400;500&display=swap'
+// Meander, the Greek line without end, as a repeating divider.
+const MEANDER = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cg fill='none' stroke='%23B8860B' stroke-width='2.4'%3E%3Cpath d='M0 25H28M3 25V5H23V19H10V12H16'/%3E%3C/g%3E%3C/svg%3E\")"
+
+const CSS = `@import url('${FONTS}');
+.hebe{--hb-gold:#8B6508;--hb-gold-soft:#B8860B;--hb-accent:var(--hb-gold);--hb-on-accent:#fff;--hb-fill:linear-gradient(90deg,#B8860B,#8B6508);
+--hb-text:var(--ui-text-primary,inherit);--hb-muted:var(--ui-text-secondary,#6e6e73);
 --hb-faint:var(--ui-text-tertiary,#8e8e93);--hb-line:var(--ui-stroke-tertiary,rgba(127,127,127,.18));
 --hb-card:var(--ui-bg-elevated,rgba(127,127,127,.05));--hb-soft:var(--ui-bg-tertiary,rgba(127,127,127,.08));
---hb-green:var(--ui-green,#30a46c);--hb-teal:#14a38f;--hb-yellow:var(--ui-yellow,#d4a017);--hb-red:var(--ui-red,#e5484d);
+--hb-green:var(--ui-green,#30a46c);--hb-yellow:var(--ui-yellow,#d4a017);--hb-red:var(--ui-red,#e5484d);
+--hb-serif:'Cormorant Garamond','Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
+--hb-roman:Cinzel,'Trajan Pro',Optima,'Palatino Linotype',serif;
+--hb-mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
 box-sizing:border-box;height:100%;overflow:auto;color:var(--hb-text);
 font:15px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.hebe[data-mode=dark]{--hb-gold:#FFD700;--hb-gold-soft:#E0B848;--hb-on-accent:#14110a;--hb-fill:linear-gradient(90deg,#CD7F32,#FFBF00 55%,#FFD700)}
 .hebe *{box-sizing:border-box}.hebe button,.hebe input,.hebe textarea{font:inherit;color:inherit}
 .hb-wrap{max-width:1040px;margin:0 auto;padding:28px clamp(18px,4vw,48px) 56px}
-.hb-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:28px}
-.hb-brand{display:flex;align-items:center;gap:10px;font-weight:600;letter-spacing:-.01em}
+.hb-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:26px;flex-wrap:wrap}
+.hb-brand{display:flex;align-items:center;gap:12px}
 .hb-mark{flex:none;display:block;border-radius:8px}
-.hb-brand small{display:block;font-size:12px;font-weight:500;color:var(--hb-faint);letter-spacing:0}
-.hb-pill{font-size:11px;color:var(--hb-muted);border:1px solid var(--hb-line);border-radius:999px;padding:4px 10px;white-space:nowrap}
-.hb-eyebrow{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--hb-accent)}
-.hb-herogrid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(260px,1fr);gap:32px;align-items:center}
-.hb-sample{padding:22px;display:grid;gap:10px;box-shadow:0 10px 40px rgba(0,0,0,.06)}
+.hb-word{font:600 19px/1 var(--hb-roman);letter-spacing:.18em;color:var(--hb-gold)}
+.hb-brand small{display:block;margin-top:5px;font:500 10px/1 var(--hb-mono);letter-spacing:.22em;text-transform:uppercase;color:var(--hb-faint)}
+.hb-topr{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.hebe .hb-pill{font:500 10px/1 var(--hb-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--hb-muted);border:1px solid var(--hb-line);border-radius:999px;padding:7px 11px;white-space:nowrap;background:none}
+.hebe button.hb-pill{cursor:pointer;color:var(--hb-gold);border-color:color-mix(in srgb,var(--hb-gold) 45%,transparent)}
+.hebe button.hb-pill:hover{background:color-mix(in srgb,var(--hb-gold) 10%,transparent)}
+.hb-eyebrow{font:500 11px/1.2 var(--hb-mono);letter-spacing:.24em;text-transform:uppercase;color:var(--hb-gold)}
+.hb-meander{height:14px;background:${MEANDER} repeat-x left center/14px 14px;opacity:.55;margin:30px 0 0}
+.hb-panel{position:relative;overflow:hidden;border-radius:22px;background:radial-gradient(circle at 78% 42%,rgba(255,191,0,.15),transparent 52%),#0d0c0a;
+color:#ece6d8;padding:clamp(26px,4vw,44px);display:grid;grid-template-columns:minmax(0,1.25fr) minmax(220px,.75fr);gap:20px;align-items:center;border:1px solid rgba(255,215,0,.16)}
+.hb-panel .hb-eyebrow{color:#d9b45a}
+.hb-panel h1{font:500 clamp(40px,5.4vw,62px)/1.02 var(--hb-serif);letter-spacing:-.01em;margin:14px 0 16px;text-wrap:balance}
+.hb-panel h1 i{color:#FFD700;font-weight:600}
+.hb-panel p{font-size:16px;color:#bdb4a2;max-width:560px;margin:0 0 26px}
+.hb-panel .hb-btn{border-color:rgba(255,215,0,.32);background:transparent;color:#ece6d8}
+.hb-panel .hb-btn:hover:not(:disabled){background:rgba(255,215,0,.08)}
+.hebe .hb-panel .hb-primary{background:linear-gradient(180deg,#FFE680,#FFD700 45%,#FFBF00);color:#14110a;border-color:transparent}
+.hb-bust{width:100%;max-width:300px;justify-self:center;display:block}
+.hb-herogrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+.hb-sample{padding:22px;display:grid;gap:10px}
 .hb-srow{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;color:var(--hb-muted)}.hb-srow b{color:var(--hb-text);font-variant-numeric:tabular-nums}
-.hb-steal{color:var(--hb-teal);font-weight:600;font-size:14px}
-.hb-sbig{font-size:56px;font-weight:700;letter-spacing:-.04em;line-height:1}.hb-sbig span{font-size:18px;font-weight:500;color:var(--hb-muted);letter-spacing:0}
+.hb-sbig{font:500 64px/1 var(--hb-serif);letter-spacing:-.01em;margin-top:2px;font-variant-numeric:lining-nums}.hb-sbig span{font:500 15px/1 var(--hb-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--hb-muted)}
 .hb-ssub{font-weight:600;margin-bottom:6px}
-.hb-sbar{display:grid;gap:5px}.hb-strack{height:7px;border-radius:99px;background:var(--hb-soft);overflow:hidden}.hb-strack div{height:100%;border-radius:99px}
+.hb-sbar{display:grid;gap:5px}.hb-strack{height:6px;border-radius:99px;background:var(--hb-soft);overflow:hidden}.hb-strack div{height:100%;border-radius:99px}
 .hb-smove{border-top:1px solid var(--hb-line);padding-top:10px;margin-top:4px}
-.hb-hero h1{text-wrap:balance;font-size:clamp(34px,5vw,52px);line-height:1.05;letter-spacing:-.035em;margin:10px 0 14px;font-weight:700}
-.hb-hero p{font-size:17px;color:var(--hb-muted);max-width:620px;margin:0 0 24px}
 .hb-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .hb-btn{border:1px solid var(--hb-line);background:var(--hb-card);border-radius:10px;padding:10px 16px;min-height:42px;cursor:pointer;font-weight:500;transition:transform .12s,background .12s}
 .hb-btn:hover:not(:disabled){background:var(--hb-soft)}.hb-btn:active:not(:disabled){transform:scale(.98)}
 .hb-btn:disabled{opacity:.45;cursor:not-allowed}
-.hebe .hb-primary{background:var(--hb-accent);border-color:transparent;color:var(--ui-accent-foreground,#fff);font-weight:600}
+.hebe .hb-primary{background:var(--hb-accent);border-color:transparent;color:var(--hb-on-accent);font-weight:600}
 .hebe .hb-primary:hover:not(:disabled){background:var(--hb-accent);filter:brightness(1.08)}
+.hebe[data-mode=dark] .hb-primary{background:linear-gradient(180deg,#FFE680,#FFD700 45%,#FFBF00)}
 .hb-link{background:none;border:0;padding:0;color:var(--hb-accent);cursor:pointer;font-weight:500}
-.hebe :focus-visible{outline:2px solid var(--hb-accent);outline-offset:2px}
-.hb-section{margin-top:44px}.hb-section>h2{font-size:20px;letter-spacing:-.02em;margin:0 0 14px}
+.hebe :focus-visible{outline:2px solid var(--hb-gold);outline-offset:2px}
+.hb-section{margin-top:44px}.hb-section>h2{font:600 28px/1.1 var(--hb-serif);letter-spacing:0;margin:0 0 16px}
 .hb-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
 .hb-card{background:var(--hb-card);border:1px solid var(--hb-line);border-radius:16px;padding:20px}
-.hb-step b{display:block;font-size:16px;margin:8px 0 4px;letter-spacing:-.01em}.hb-step p{margin:0;color:var(--hb-muted);font-size:14px}
-.hb-num{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:600;background:var(--hb-soft);color:var(--hb-muted)}
+.hb-step b{display:block;font:600 22px/1.15 var(--hb-serif);margin:14px 0 6px}.hb-step p{margin:0;color:var(--hb-muted);font-size:14px}
+.hb-num{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font:600 14px/1 var(--hb-roman);letter-spacing:.04em;color:var(--hb-gold);border:1px solid color-mix(in srgb,var(--hb-gold) 55%,transparent)}
 .hb-chips{display:flex;flex-wrap:wrap;gap:8px}
 .hb-chip{border:1px solid var(--hb-line);background:transparent;border-radius:999px;padding:8px 14px;cursor:pointer;font-size:14px;text-align:left}
-.hb-chip:hover{background:var(--hb-soft)}.hb-chip::before{content:"\\201C"}.hb-chip::after{content:"\\201D"}
+.hb-chip:hover{background:var(--hb-soft);border-color:color-mix(in srgb,var(--hb-gold) 45%,transparent)}.hb-chip::before{content:"\\201C"}.hb-chip::after{content:"\\201D"}
 .hb-note{font-size:13px;color:var(--hb-muted);margin-top:10px}
-.hb-foot{margin-top:48px;padding-top:18px;border-top:1px solid var(--hb-line);font-size:12px;color:var(--hb-faint);display:grid;gap:4px}
+.hb-foot{margin-top:44px;font-size:12px;color:var(--hb-faint);display:grid;gap:4px}.hb-foot .hb-meander{margin:0 0 16px;opacity:.35}
 .hb-tabs{display:flex;gap:4px;padding:4px;background:var(--hb-soft);border-radius:11px;width:max-content;max-width:100%;overflow:auto}
 .hb-tab{border:0;background:transparent;border-radius:8px;padding:7px 14px;cursor:pointer;font-weight:500;color:var(--hb-muted);white-space:nowrap}
-.hb-tab[aria-selected=true]{background:var(--ui-bg-editor,var(--hb-card));color:var(--hb-text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.hb-tab[aria-selected=true]{background:var(--ui-bg-editor,var(--hb-card));color:var(--hb-text);box-shadow:0 1px 3px rgba(0,0,0,.12),inset 0 -2px 0 var(--hb-gold)}
 .hb-bar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:14px;margin-bottom:18px}
-.hb-person{font-size:24px;font-weight:700;letter-spacing:-.02em}.hb-person small{display:block;font-size:13px;font-weight:400;color:var(--hb-muted);letter-spacing:0}
+.hb-person{font:600 32px/1.1 var(--hb-serif);font-variant-numeric:lining-nums}.hb-person small{display:block;margin-top:6px;font:400 13px/1.4 -apple-system,BlinkMacSystemFont,system-ui,sans-serif;color:var(--hb-muted)}
 .hb-frame{width:100%;border:0;display:block;background:transparent}
-.hb-ask{margin-top:22px}.hb-ask h3,.hb-card h3{font-size:15px;margin:0 0 10px}
+.hb-ask{margin-top:22px}.hb-ask h3,.hb-card h3{font:600 20px/1.2 var(--hb-serif);margin:0 0 10px}
 .hb-table{width:100%;border-collapse:collapse;font-size:14px}.hb-table td{padding:10px 0;border-top:1px solid var(--hb-line);vertical-align:top}
 .hb-table td:last-child{text-align:right;font-variant-numeric:tabular-nums}.hb-table small{display:block;color:var(--hb-faint);font-size:12px}
 .hb-meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:6px 0 16px}
 .hb-meta small{display:block;font-size:12px;color:var(--hb-faint)}.hb-meta b{font-weight:600}
 .hb-checks{list-style:none;padding:0;margin:14px 0 0;display:grid;gap:6px;font-size:14px}
-.hb-checks li::before{content:"\\2713";color:var(--hb-green);font-weight:700;margin-right:8px}
+.hb-checks li::before{content:"\\2713";color:var(--hb-gold);font-weight:700;margin-right:8px}
 .hb-grid2{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:16px;align-items:start}
 .hb-field{display:grid;gap:6px;margin-bottom:14px;font-size:13px;font-weight:600}
 .hb-field input,.hb-field textarea{width:100%;border:1px solid var(--hb-line);background:var(--ui-bg-input,transparent);border-radius:10px;padding:10px 12px;font-weight:400}
-.hb-field textarea{min-height:150px;font:12px/1.5 ui-monospace,SFMono-Regular,monospace;resize:vertical}
+.hb-field textarea{min-height:150px;font:12px/1.5 var(--hb-mono);resize:vertical}
 .hb-filebtn{position:relative;overflow:hidden;display:inline-flex;align-items:center}.hb-filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
 .hb-mgrid{display:grid;gap:8px}.hb-mrow{display:grid;grid-template-columns:minmax(0,1fr) 110px 110px;gap:10px;align-items:center;font-size:14px}
 .hb-mrow input,.hb-mrow select{width:100%;border:1px solid var(--hb-line);background:var(--ui-bg-input,transparent);border-radius:9px;padding:8px 10px;font-variant-numeric:tabular-nums}
@@ -83,27 +105,28 @@ font:15px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-seri
 .hb-field span{font-weight:400;color:var(--hb-faint)}
 .hb-banner{border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:14px;display:flex;gap:10px;align-items:flex-start}
 .hb-error{background:color-mix(in srgb,var(--hb-red) 12%,transparent);border:1px solid color-mix(in srgb,var(--hb-red) 35%,transparent)}
-.hb-ok{background:color-mix(in srgb,var(--hb-green) 12%,transparent);border:1px solid color-mix(in srgb,var(--hb-green) 35%,transparent)}
+.hb-ok{background:color-mix(in srgb,var(--hb-gold) 10%,transparent);border:1px solid color-mix(in srgb,var(--hb-gold) 35%,transparent)}
 .hb-busy{display:flex;align-items:center;gap:10px;color:var(--hb-muted);font-size:14px;padding:30px 0}
-.hb-spin{width:16px;height:16px;border-radius:50%;border:2px solid var(--hb-line);border-top-color:var(--hb-accent);animation:hb-spin .9s linear infinite}
+.hb-spin{width:16px;height:16px;border-radius:50%;border:2px solid var(--hb-line);border-top-color:var(--hb-gold);animation:hb-spin .9s linear infinite}
 @keyframes hb-spin{to{transform:rotate(360deg)}}
 .hb-badge{display:inline-block;font-size:12px;font-weight:600;border-radius:999px;padding:2px 9px;background:var(--hb-soft);color:var(--hb-muted)}
 .hb-badge.clear{background:color-mix(in srgb,var(--hb-green) 15%,transparent);color:var(--hb-green)}
 .hb-badge.caution{background:color-mix(in srgb,var(--hb-yellow) 18%,transparent);color:var(--hb-yellow)}
 .hb-badge.block,.hb-badge.revise{background:color-mix(in srgb,var(--hb-red) 15%,transparent);color:var(--hb-red)}
-.hb-plan{display:grid;gap:14px}.hb-plan h3{font-size:17px;margin:0;letter-spacing:-.01em}
+.hb-plan{display:grid;gap:14px}.hb-plan h3{font:600 22px/1.2 var(--hb-serif);margin:0}
 .hb-list{list-style:none;margin:0;padding:0;display:grid;gap:8px;font-size:14px}.hb-list li{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
 .hb-list small{color:var(--hb-faint)}
 .hb-objections{white-space:pre-wrap;font-size:13px;color:var(--hb-muted);background:var(--hb-soft);border-radius:10px;padding:12px;margin:8px 0 0;max-height:260px;overflow:auto}
 .hb-confirm{border-top:1px solid var(--hb-line);padding-top:14px;display:grid;gap:12px}
-.hb-check{display:flex;gap:10px;align-items:flex-start;font-size:14px}.hb-check input{margin-top:3px;accent-color:var(--hb-accent)}
+.hb-check{display:flex;gap:10px;align-items:flex-start;font-size:14px}.hb-check input{margin-top:3px;accent-color:var(--hb-gold)}
 .hb-empty{text-align:center;padding:40px 20px}.hb-empty p{color:var(--hb-muted);max-width:460px;margin:6px auto 18px}
 .hb-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .hb-option{text-align:left;cursor:pointer;display:grid;gap:6px}.hb-option:hover{background:var(--hb-soft)}
-.hb-option b{font-size:16px}.hb-option span{color:var(--hb-muted);font-size:14px}
+.hb-option b{font:600 21px/1.2 var(--hb-serif)}.hb-option span{color:var(--hb-muted);font-size:14px}
 .hb-dcard{display:flex;align-items:center;gap:16px;border:1px solid var(--hb-line);border-radius:14px;padding:14px 16px;max-width:520px;background:var(--hb-card)}
-.hb-dcard .hb-big{font-size:30px;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
-@media(max-width:760px){.hb-herogrid,.hb-steps,.hb-options,.hb-grid2,.hb-meta{grid-template-columns:1fr}}
+.hb-dcard .hb-big{font:500 36px/1 var(--hb-serif);font-variant-numeric:lining-nums tabular-nums}
+.hb-dcard .hb-big span{font:500 11px/1 var(--hb-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--hb-muted)}
+@media(max-width:760px){.hb-panel,.hb-herogrid,.hb-steps,.hb-options,.hb-grid2,.hb-meta{grid-template-columns:1fr}.hb-bust{display:none}}
 @media(prefers-reduced-motion:reduce){.hb-spin{animation:none}.hb-btn{transition:none}}
 `
 
@@ -144,35 +167,91 @@ function Ask({ ctx, title }) {
 }
 
 function Footer({ disclaimer }) {
-  return h('div', { className: 'hb-foot' },
+  return h('div', { className: 'hb-foot' }, h('div', { className: 'hb-meander', 'aria-hidden': true }),
     h('div', null, 'Your blood results stay in this Hermes. Your chat model sees what appears in chat.'),
     h('div', null, disclaimer || 'Research and education only. Not a diagnosis or treatment recommendation.'),
     h('div', null, 'Built on PLSI by Insilico Medicine (MIT), the open toolbelt behind Longevity Grok. Not affiliated with Insilico Medicine or xAI.'))
 }
 
-// Hebe's mark: a blood drop holding Hebe's cup, the Greek goddess of youth.
+// Gold bands, top to bottom, as in the Hermes Agent banner.
+const GOLD = [['0', '#FFE680'], ['.4', '#FFD700'], ['.72', '#FFBF00'], ['1', '#CD7F32']]
+const stops = () => GOLD.map(([o, c]) => h('stop', { key: o, offset: o, stopColor: c }))
+
+// Hebe's mark: her cup with a drop of ambrosia, gold on ink.
 function Mark({ size = 28 }) {
+  const g = 'url(#hebe-mark-g)'
   return h('svg', { width: size, height: size, viewBox: '0 0 64 64', 'aria-hidden': true, className: 'hb-mark' },
-    h('defs', null, h('linearGradient', { id: 'hebe-mark-g', x1: 0, y1: 0, x2: 1, y2: 1 },
-      h('stop', { offset: 0, stopColor: '#19b39c' }), h('stop', { offset: 1, stopColor: '#0a6e63' }))),
-    h('rect', { width: 64, height: 64, rx: 15, fill: 'url(#hebe-mark-g)' }),
-    h('path', { d: 'M32 9c0 0-15 16.5-15 27a15 15 0 0 0 30 0C47 25.5 32 9 32 9z', fill: '#fff' }),
-    h('path', { d: 'M23.5 34.5c3 4 5.5 5.5 8.5 5.5s5.5-1.5 8.5-5.5', fill: 'none', stroke: '#0d8576', strokeWidth: 3, strokeLinecap: 'round' }),
-    h('path', { d: 'M32 40v6M27.5 46h9', stroke: '#0d8576', strokeWidth: 3, strokeLinecap: 'round' }))
+    h('defs', null, h('linearGradient', { id: 'hebe-mark-g', x1: 0, y1: 0, x2: 0, y2: 1 }, stops())),
+    h('rect', { width: 64, height: 64, rx: 14, fill: '#0d0c0a' }),
+    h('g', { transform: 'translate(32 32) scale(1.18) translate(-32 -31)' },
+      h('path', { d: 'M32 10.5c0 0-6.2 7.4-6.2 11.2a6.2 6.2 0 0 0 12.4 0c0-3.8-6.2-11.2-6.2-11.2z', fill: g }),
+      h('path', { d: 'M12.5 30.5h39c-1.2 8.2-9 12.6-19.5 12.6S13.7 38.7 12.5 30.5z', fill: g }),
+      h('path', { d: 'M13.2 32.6c-4.6-.4-5.6-5.3-1.6-6.1M50.8 32.6c4.6-.4 5.6-5.3 1.6-6.1', fill: 'none', stroke: g, strokeWidth: 2.2, strokeLinecap: 'round' }),
+      h('path', { d: 'M32 43v5.5M25.5 50.5h13', stroke: g, strokeWidth: 3, strokeLinecap: 'round' })))
+}
+
+// Hebe in profile, one gold line inside a halo. Drawn on a 400 x 500 grid.
+const BUST = [
+  'M236 128C254 140 262 160 264 182C265 192 268 200 272 208L292 250C295 256 291 260 284 260C280 260 278 262 278 266C278 269 282 271 284 274C282 277 278 278 276 279C280 281 282 285 280 289C278 293 272 294 272 298C272 304 280 310 280 318C280 330 270 338 256 340C244 342 238 344 236 350',
+  'M236 350C236 366 238 382 244 398C284 410 318 432 330 466', 'M174 292C176 330 172 370 160 398C120 412 96 434 86 466', 'M86 466Q208 484 330 466',
+  'M236 128C214 104 166 104 138 136C118 160 116 196 124 222', 'M98 256a40 34 0 1 0 80 0a40 34 0 1 0 -80 0', 'M138 256m-21 0a21 17 0 1 1 21 17a13 10 0 1 1 -8 -11',
+  'M232 126C206 132 184 156 170 196C164 214 162 228 166 240', 'M222 116C192 118 166 140 152 176C146 192 144 208 148 224',
+  'M246 150C228 160 212 182 202 210C198 222 192 234 182 246', 'M240 180C248 174 258 175 264 181', 'M244 196C249 192 256 192 260 196C255 199 249 199 244 196z', 'M150 476H266'
+]
+function Bust() {
+  return h('svg', { viewBox: '40 60 340 440', className: 'hb-bust', 'aria-hidden': true },
+    h('defs', null, h('linearGradient', { id: 'hebe-bust-g', gradientUnits: 'userSpaceOnUse', x1: 0, y1: 105, x2: 0, y2: 480 }, stops())),
+    h('circle', { cx: 205, cy: 245, r: 160, fill: 'none', stroke: '#FFD700', strokeOpacity: .25, strokeWidth: 1.2 }),
+    h('circle', { cx: 205, cy: 245, r: 178, fill: 'none', stroke: '#FFBF00', strokeOpacity: .55, strokeWidth: 2.4, strokeLinecap: 'round', strokeDasharray: '0 10' }),
+    h('g', { fill: 'none', stroke: 'url(#hebe-bust-g)', strokeWidth: 2.4, strokeLinecap: 'round', strokeLinejoin: 'round' },
+      BUST.map(d => h('path', { key: d, d })), h('path', { d: 'M146 150C168 120 204 110 232 120', strokeWidth: 4.5 })))
+}
+
+// Ink and gold for the whole app. Listed in Settings > Appearance; the Hebe page offers it with one click.
+const THEME = {
+  name: 'hebe', label: 'Hebe', description: 'Ink and gold, from the Hebe plugin',
+  colors: {
+    background: '#faf7f0', foreground: '#1f1a12', card: '#ffffff', cardForeground: '#1f1a12', muted: '#f1ece1', mutedForeground: '#6f6553',
+    popover: '#ffffff', popoverForeground: '#1f1a12', primary: '#8B6508', primaryForeground: '#ffffff', secondary: '#efe8d8', secondaryForeground: '#3a3020',
+    accent: '#f3ead3', accentForeground: '#5a4100', border: '#e4dccb', input: '#e4dccb', ring: '#8B6508', midground: '#8B6508', composerRing: '#B8860B',
+    destructive: '#c62828', destructiveForeground: '#ffffff', sidebarBackground: '#f4efe4', sidebarBorder: '#e4dccb', userBubble: '#f3ead3', userBubbleBorder: '#e4d5ad'
+  },
+  darkColors: {
+    background: '#0d0c0a', foreground: '#ece6d8', card: '#15130f', cardForeground: '#ece6d8', muted: '#1d1a15', mutedForeground: '#a39a88',
+    popover: '#17150f', popoverForeground: '#ece6d8', primary: '#FFD700', primaryForeground: '#14110a', secondary: '#221e17', secondaryForeground: '#e0d6c0',
+    accent: '#2a2418', accentForeground: '#f3e3b5', border: '#2b261d', input: '#2b261d', ring: '#FFD700', midground: '#FFD700', composerRing: '#B8860B',
+    destructive: '#e5534b', destructiveForeground: '#ffffff', sidebarBackground: '#090807', sidebarBorder: '#1f1b15', userBubble: '#1f1a10', userBubbleBorder: '#3d3218'
+  }
+}
+const PREVIOUS = 'hebe-longevity.previous-theme'
+const remember = v => { try { v ? localStorage.setItem(PREVIOUS, v) : localStorage.removeItem(PREVIOUS) } catch {} }
+const recall = () => { try { return localStorage.getItem(PREVIOUS) || '' } catch { return '' } }
+
+// Offer the Hebe theme, and the way back, without ever switching on its own.
+function ThemeSwitch() {
+  const t = useTheme()
+  if (!t || !t.setTheme) return null
+  const prev = recall(), on = t.themeName === THEME.name
+  const back = on && prev && (t.availableThemes || []).find(x => x.name === prev)
+  if (on) return back ? h('button', { type: 'button', className: 'hb-pill', onClick: () => { t.setTheme(prev); remember('') } }, 'Restore ' + back.label) : null
+  return h('button', { type: 'button', className: 'hb-pill', title: 'Ink and gold for all of Hermes. You can switch back here or in Settings.',
+    onClick: () => { remember(t.themeName); t.setTheme(THEME.name) } }, 'Use the Hebe theme')
 }
 
 // What a result looks like, before the user has one. Values are the fictional demo person's.
 function Sample() {
   const bar = (label, value, pct, accent) => h('div', { className: 'hb-sbar' },
     h('div', { className: 'hb-srow' }, h('span', null, label), h('b', null, value)),
-    h('div', { className: 'hb-strack' }, h('div', { style: { width: pct + '%', background: accent ? 'var(--hb-teal)' : 'var(--hb-faint)' } })))
+    h('div', { className: 'hb-strack' }, h('div', { style: { width: pct + '%', background: accent ? 'var(--hb-fill)' : 'var(--hb-faint)' } })))
   return h('div', { className: 'hb-card hb-sample', 'aria-label': 'Example result' },
-    h('div', { className: 'hb-srow' }, h('span', { className: 'hb-steal' }, 'Blood PhenoAge'), h('span', { className: 'hb-pill' }, 'Example')),
+    h('div', { className: 'hb-srow' }, h('span', { className: 'hb-eyebrow' }, 'Blood PhenoAge'), h('span', { className: 'hb-pill' }, 'Example')),
     h('div', { className: 'hb-sbig' }, '37.2', h('span', null, ' years')),
     h('div', { className: 'hb-ssub' }, '8.1 years younger than calendar age'),
     bar('Blood PhenoAge', '37.2', 62, true), bar('Calendar age', '45.3', 76),
     h('div', { className: 'hb-srow hb-smove' }, h('span', null, 'Biggest mover since last draw'), h('b', null, 'Cell size variation −1.5 y')))
 }
+
+const NUMERALS = ['I', 'II', 'III']
 
 function Welcome({ ctx, start, importOwn, demo }) {
   const steps = [
@@ -181,28 +260,30 @@ function Welcome({ ctx, start, importOwn, demo }) {
     ['Plan with Hebe', 'Hebe drafts a plan with verified studies and safety screening. An independent second model challenges it. Only you can start it.']
   ]
   return h(React.Fragment, null,
-    h('div', { className: 'hb-herogrid' }, h('div', { className: 'hb-hero' },
-      h('div', { className: 'hb-eyebrow' }, 'Blood PhenoAge for Hermes'),
-      h('h1', null, 'Know your biological age'),
-      h('p', null, 'Hebe reads nine values from a routine blood test, calculates your Blood PhenoAge, shows what moved it and helps you plan what to try next. It runs inside your Hermes, with the open toolbelt behind Longevity Grok.'),
-      h('div', { className: 'hb-row' },
-        demo && h('button', { type: 'button', className: 'hb-btn hb-primary', onClick: start }, 'Try it with demo data'),
-        h('button', { type: 'button', className: 'hb-btn', onClick: importOwn }, 'Use my blood results'))),
-      h(Sample)),
+    h('div', { className: 'hb-panel' },
+      h('div', null,
+        h('div', { className: 'hb-eyebrow' }, 'Blood PhenoAge for Hermes'),
+        h('h1', null, 'Know your ', h('i', null, 'biological'), ' age'),
+        h('p', null, 'Hebe reads nine values from a routine blood test, calculates your Blood PhenoAge, shows what moved it and helps you plan what to try next. It runs inside your Hermes, with the open toolbelt behind Longevity Grok.'),
+        h('div', { className: 'hb-row' },
+          demo && h('button', { type: 'button', className: 'hb-btn hb-primary', onClick: start }, 'Try it with demo data'),
+          h('button', { type: 'button', className: 'hb-btn', onClick: importOwn }, 'Use my blood results'))),
+      h(Bust)),
+    h('div', { className: 'hb-meander', 'aria-hidden': true }),
     h('div', { className: 'hb-section' },
       h('h2', null, 'How Hebe works'),
       h('div', { className: 'hb-steps' }, steps.map(([t, p], i) => h('div', { key: t, className: 'hb-card hb-step' },
-        h('span', { className: 'hb-num' }, i + 1), h('b', null, t), h('p', null, p))))),
-    h('div', { className: 'hb-section' },
-      h('h2', null, 'What you can ask Hebe'),
-      h(Ask, { ctx, title: ' ' })))
+        h('span', { className: 'hb-num' }, NUMERALS[i]), h('b', null, t), h('p', null, p))))),
+    h('div', { className: 'hb-section hb-herogrid' },
+      h('div', null, h('h2', { style: { font: '600 28px/1.1 var(--hb-serif)', margin: '0 0 16px' } }, 'What a result looks like'), h(Sample)),
+      h('div', null, h('h2', { style: { font: '600 28px/1.1 var(--hb-serif)', margin: '0 0 6px' } }, 'What you can ask Hebe'), h(Ask, { ctx, title: ' ' }))))
 }
 
 function Review({ preview, busy, save, cancel }) {
   const conv = preview.conversions
   return h('div', { className: 'hb-card' },
     h('div', { className: 'hb-eyebrow' }, preview.demo ? 'Demo data, fictional person' : 'Your blood panel'),
-    h('h2', { style: { fontSize: 26, letterSpacing: '-.02em', margin: '6px 0 4px' } }, 'Check your values before saving'),
+    h('h2', { style: { font: '600 32px/1.1 var(--hb-serif)', margin: '8px 0 6px' } }, 'Check your values before saving'),
     h('p', { style: { color: 'var(--hb-muted)', margin: '0 0 14px' } }, 'Hebe calculates only after you confirm. Saved values cannot be changed later.'),
     h('div', { className: 'hb-meta' },
       h('div', null, h('small', null, 'Person'), h('b', null, pretty(preview.person_id))),
@@ -349,7 +430,7 @@ function Plans({ ctx, person, refreshKey }) {
   if (!data) return h(Busy, { label: 'Loading plans…' })
   const draft = 'What could I try to lower my Blood PhenoAge? Please draft a plan for ' + person + '.'
   if (!data.drafts.length && !data.plans.length) return h('div', { className: 'hb-card hb-empty' },
-    h('h3', { style: { fontSize: 20 } }, 'No plans yet'),
+    h('h3', { style: { fontSize: 26 } }, 'No plans yet'),
     h('p', null, 'Hebe drafts a plan in chat: options backed by studies, safety screening and an independent challenger. You decide here whether to start it.'),
     h('button', { type: 'button', className: 'hb-btn hb-primary', onClick: () => askHebe(ctx, draft) }, 'Draft a plan with Hebe'))
   return h('div', { className: 'hb-plan' },
@@ -396,7 +477,14 @@ function Plans({ ctx, person, refreshKey }) {
     h('button', { type: 'button', className: 'hb-btn', style: { justifySelf: 'start' }, onClick: () => askHebe(ctx, draft) }, 'Draft another plan with Hebe'))
 }
 
+// Light or dark as the app paints it, so Hebe's gold stays readable in both.
+function useMode() {
+  const t = useTheme()
+  return t && t.resolvedMode === 'light' ? 'light' : t && t.resolvedMode === 'dark' ? 'dark' : 'light'
+}
+
 function App({ ctx }) {
+  const mode = useMode()
   const [boot, setBoot] = React.useState(null), [error, setError] = React.useState(''), [busy, setBusy] = React.useState('')
   const [view, setView] = React.useState('main'), [tab, setTab] = React.useState('report'), [preview, setPreview] = React.useState(null)
   const [person, setPerson] = React.useState(''), [flash, setFlash] = React.useState(''), [planKey, setPlanKey] = React.useState(0), [importMode, setImportMode] = React.useState('manual')
@@ -451,12 +539,12 @@ function App({ ctx }) {
         h('button', { type: 'button', className: 'hb-card hb-option', onClick: () => setView('import') },
           h('b', null, 'Add my blood results'), h('span', null, 'Type in nine values from one lab report, or upload a CSV. You check every value before saving.'))))
   }
-  return h('div', { className: 'hebe' }, h('style', null, CSS),
+  return h('div', { className: 'hebe', 'data-mode': mode }, h('style', null, CSS),
     h('div', { className: 'hb-wrap' },
       h('div', { className: 'hb-top' },
-        h('div', { className: 'hb-brand' }, h(Mark, { size: 30 }),
-          h('div', null, 'Hebe', h('small', null, 'Personal Longevity Intelligence'))),
-        h('span', { className: 'hb-pill' }, 'Research prototype')),
+        h('div', { className: 'hb-brand' }, h(Mark, { size: 34 }),
+          h('div', null, h('div', { className: 'hb-word' }, 'HEBE'), h('small', null, 'Personal Longevity Intelligence'))),
+        h('div', { className: 'hb-topr' }, h(ThemeSwitch), h('span', { className: 'hb-pill' }, 'Research prototype'))),
       flash && view === 'main' && h('div', { className: 'hb-banner hb-ok', role: 'status' }, flash),
       error && boot && h('div', { className: 'hb-banner hb-error', role: 'alert' }, error),
       body,
@@ -469,11 +557,12 @@ function ChatCard({ ctx, view }) {
   React.useEffect(() => { let live = true; ctx.rest('/bootstrap').then(b => live && setBoot(b), () => live && setBoot({ people: [] })); return () => { live = false } }, [])
   const p = boot && boot.people[boot.people.length - 1]
   const open = () => host.navigate(PATH)
-  return h('div', { className: 'hebe', style: { height: 'auto', overflow: 'visible' } }, h('style', null, CSS),
-    h('div', { className: 'hb-dcard' }, h(Mark, { size: 36 }),
-      p ? h('div', null, h('div', { className: 'hb-big' }, one(p.latest.pheno_age), h('span', { style: { fontSize: 15, fontWeight: 500 } }, ' years')),
+  const mode = useMode()
+  return h('div', { className: 'hebe', 'data-mode': mode, style: { height: 'auto', overflow: 'visible' } }, h('style', null, CSS),
+    h('div', { className: 'hb-dcard' }, h(Mark, { size: 40 }),
+      p ? h('div', null, h('div', { className: 'hb-big' }, one(p.latest.pheno_age), h('span', null, ' years')),
             h('div', { className: 'hb-note', style: { marginTop: 0 } }, `Blood PhenoAge, ${pretty(p.person_id)}, ${day(p.latest.measured_at)}`))
-        : h('div', null, h('b', null, 'Hebe'), h('div', { className: 'hb-note', style: { marginTop: 0 } }, boot ? 'No blood results yet' : 'Loading…')),
+        : h('div', null, h('div', { className: 'hb-word' }, 'HEBE'), h('div', { className: 'hb-note', style: { marginTop: 0 } }, boot ? 'No blood results yet' : 'Loading…')),
       h('button', { type: 'button', className: 'hb-btn hb-primary', style: { marginLeft: 'auto' }, onClick: open },
         view === 'plans' ? 'Open plans' : p ? 'Open report' : 'Open Hebe')))
 }
@@ -490,6 +579,7 @@ export default {
       { id: 'page', area: ROUTES_AREA, data: { path: PATH }, render: () => h(Page) },
       { id: 'nav', area: SIDEBAR_NAV_AREA, data: { path: PATH, label: 'Hebe', codicon: 'pulse' } },
       { id: 'open', area: PALETTE_AREA, data: { id: 'hebe-open', label: 'Hebe: Open Personal Longevity Intelligence', run: () => host.navigate(PATH) } },
+      { id: 'theme', area: THEMES_AREA, data: THEME },
       { id: 'card', area: TRANSCRIPT_DIRECTIVE_AREA, data: { name: 'hebe', render: ({ attrs }) => h(ChatCard, { ctx, view: attrs && attrs.view === 'plans' ? 'plans' : 'result' }) } }
     ])
   }
