@@ -51,7 +51,9 @@ class Plans:
 
     def _sync(self, person):
         history = self.service.history(person)
-        return self.plsi.sync(history, demo=person == DEMO_PERSON)
+        with self.service.db() as db:
+            started = db.execute('SELECT 1 FROM plan_drafts WHERE person=? AND recorded_plan IS NOT NULL', (person,)).fetchone()
+        return self.plsi.sync(history, demo=person == DEMO_PERSON, has_plans=bool(started))
 
     def state(self, person):
         state = self._sync(person)

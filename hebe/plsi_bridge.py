@@ -30,7 +30,7 @@ def dependency_paths():
     return os.pathsep.join(paths)
 ALLOWED = {('init',), ('ingest',), ('project',), ('state', 'show'), ('calc', 'derive'), ('evidence', 'search'),
            ('evidence', 'verify'), ('screen',), ('plan', 'check'), ('plan', 'record'), ('plan', 'adopt'),
-           ('plan', 'list'), ('due',)}
+           ('plan', 'list'), ('due',), ('revise',)}
 # LOINC codes accepted by the pinned blood_phenoage map for each canonical unit
 LOINC = {'albumin': '1751-7', 'creatinine': '14682-9', 'glucose': '14749-6', 'crp': '1988-5',
          'lymphocyte_pct': '736-9', 'mcv': '787-2', 'rdw': '788-0', 'alp': '6768-6', 'wbc': '6690-2'}
@@ -86,13 +86,31 @@ class Plsi:
         path.write_text(json.dumps(payload, sort_keys=True))
         return path
 
-    def sync(self, results, demo=False):
-        """Feed confirmed Hebe snapshots of one person into PLSI and project blood_phenoage. Idempotent:
-        PLSI reports repeated observations as duplicates."""
+    def _legacy(self, person, document):
+        """Observations an older Hebe ingested without a document id. PLSI cannot match them to a correction."""
+        path = self.data / person / 'events.jsonl'
+        if not path.is_file():
+            return False
+        for line in path.read_text().splitlines():
+            event = json.loads(line) if line.strip() else {}
+            if event.get('type') == 'observation' and (event.get('payload') or {}).get('origin', {}).get('document') != document:
+                return True
+        return False
+
+    def sync(self, results, demo=False, has_plans=False):
+        """Hand PLSI the current confirmed Hebe draws of one person as one document and project blood_phenoage.
+        PLSI's own `revise` skips unchanged values and retracts corrected or deleted ones; its log is never edited."""
         from .service import UNITS
         if not results:
             raise PlsiError('No confirmed blood draws for this person.')
         person = results[0]['person_id']
+        document = f'hebe-{person}'
+        if self._legacy(person, document):
+            if has_plans:
+                raise PlsiError('This person\'s PLSI record comes from an older Hebe and holds started plans, so corrections '
+                                'cannot reach it. Delete the person under Blood draws and add the draws again.')
+            import shutil
+            shutil.rmtree(self.data / person)  # rebuilt below from Hebe's confirmed draws, which are the source
         self.run('init', '--instance', person, '--birth-year', results[0]['birth_year'],
                  '--relation', 'sample' if demo else 'self')
         lines = ['effective_at,text,value,unit,code_system,code']
@@ -101,8 +119,8 @@ class Plsi:
                 lines.append(f'{r["measured_at"]}T12:00:00Z,{marker},{r["values"][marker]!r},{UNITS[marker]},loinc,{code}')
         path = self.write(f'{person}-draws.csv', None)
         path.write_text('\n'.join(lines) + '\n')
-        ingest = self.run('ingest', '--instance', person, '--csv', path)
-        if ingest['counts'].get('rejected'):
+        revised = self.run('revise', '--instance', person, '--document', document, '--csv', path)
+        if revised['counts'].get('rejected'):
             raise PlsiError('PLSI rejected confirmed values; nothing was planned.')
         state = self.run('project', '--instance', person, '--map', 'blood_phenoage')['state']
         return state

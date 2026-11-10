@@ -11,6 +11,7 @@ Know your biological age. Hebe reads nine values from a routine blood test, calc
 - **A Hebe page in Hermes Desktop.** Open **Hebe** in the sidebar: add a blood test, check every value, see your report, start plans. All with clicks, no files or commands needed
 - **Your Blood PhenoAge** from nine routine blood markers, calculated with the same original formula Longevity Grok uses
 - **Your trend** across blood draws and which values moved your result
+- **Your draws, under your control.** View any earlier draw, correct a typo or delete a draw. Deleting a person removes their draws, plans and PLSI record. Every change needs your click on the Hebe page
 - **A plan to lower it**, built the Longevity Grok way: verified studies, safety screening, an independent challenger model, and a start that only you can approve
 - **A Hebe theme for Hermes.** Black marble and champagne gold for the whole app, offered on the Hebe page and in Settings > Appearance. It is never switched on for you, and the Hebe page offers the way back
 - **One install.** Longevity Grok creates a team of bots; in Hermes the same roles run as skills in your agent, and your data stays in your Hermes home
@@ -59,9 +60,11 @@ All nine markers, one matching person, one draw/date, unique observation IDs and
 
 Data lives under the active `HERMES_HOME/plugin-data/hebe-longevity/`, never the plugin installation directory. Validated previews are stored locally for up to 30 minutes (expired previews are removed on the next preview), separately from confirmed results. Starting the same preview refreshes its 30-minute deadline; cancelling or a missing confirmation dialog discards it. The dialog approves an immutable snapshot, not a later file read. The database uses transactions to prevent duplicate concurrent commits.
 
+**Corrections and deletion.** Under **Blood draws** on the Hebe page you can correct a saved draw (you review the new values and confirm, like a new draw), delete one draw or delete a person. Each needs a fresh confirmation that only the page requests after your click; the agent has no tool for it. Hebe hands PLSI the current draws as one document with PLSI's own `plsi revise`, so corrected and deleted values are retracted in PLSI's append-only log, never edited. Deleting a person also removes their plan drafts, started plans and PLSI record. Demo draws cannot be corrected, only deleted.
+
 The model tool `hebe_preview` can prepare **fictional** demo data and list result identifiers. It cannot approve or commit. Real imports use the user command and confirmation dialog. Who may answer a dialog in a shared messenger session depends on Hermes and has not been tested. This permission split is not a sandbox against a separately enabled shell or other powerful tools.
 
-PhenoAge, trend and reports make no network or model calls. The Hebe page in Desktop loads its display fonts (Cormorant Garamond, Montserrat) from Google Fonts, like several built-in Hermes themes do; that request carries no health data, and the page falls back to system fonts when it is offline. Plans do: evidence search contacts the public sources listed under Plans with topic queries only, and the challenger is a call to your configured model. **Hermes itself may send chat/tool outputs to your configured cloud model.** The plugin does not enforce network isolation. Health data shown in reports and chat remains sensitive. Delete the plugin data directory yourself to remove stored results; there is no automatic retention policy for confirmed results.
+PhenoAge, trend and reports make no network or model calls. The Hebe page in Desktop loads its display fonts (Cormorant Garamond, Montserrat) from Google Fonts, like several built-in Hermes themes do; that request carries no health data, and the page falls back to system fonts when it is offline. Plans do: evidence search contacts the public sources listed under Plans with topic queries only, and the challenger is a call to your configured model. **Hermes itself may send chat/tool outputs to your configured cloud model.** The plugin does not enforce network isolation. Health data shown in reports and chat remains sensitive. Delete draws or people on the Hebe page, or the plugin data directory to remove everything; there is no automatic retention policy for confirmed results.
 
 ## Plans (Longevity Grok on Hermes)
 
@@ -74,13 +77,15 @@ Ask Hebe in chat, for example "What could I try to lower my Blood PhenoAge?". Th
 | PLSI Challenger | `hebe_challenge`: a separate Hermes model call (auxiliary task `hebe_challenger`, its own model if you configure one) that sees only the plan, state and screening, never the planner's reasoning |
 | Record and adopt | only the user: `/hebe plan start PLAN_ID [YYYY-MM-DD]` shows the plan, cautions and objections in a confirmation dialog |
 
-**Give the challenger a strong model.** Hermes runs auxiliary tasks on a light model by default (`auto`). For an independent check, pick a strong model, ideally from a different family than your chat model:
+**Give the challenger a strong model.** Hermes runs auxiliary tasks on a light model by default (`auto`). For an independent check, pick a strong model that differs from your chat model, from any provider you are signed in to. For example, with a ChatGPT subscription and `gpt-6.1-sol` as the chat model:
 
 ```sh
-hermes config set auxiliary.hebe_challenger.provider nous
-hermes config set auxiliary.hebe_challenger.model anthropic/claude-opus-5.5
+hermes config set auxiliary.hebe_challenger.provider openai-codex
+hermes config set auxiliary.hebe_challenger.model gpt-6-astra
 hermes config set auxiliary.hebe_challenger.reasoning_effort high
 ```
+
+If the configured provider fails (no credit, no access), Hermes falls back to another model, possibly your chat model. Check `agent.log` for `Auxiliary hebe_challenger` when independence matters.
 
 Hermes may warn that the key is not recognized; plugin tasks are registered at runtime and the setting is read.
 
@@ -92,7 +97,7 @@ The toolbelt runs as a child process of Hermes' own Python with an allowlist of 
 
 ## Supported now
 
-Strict CSV review, PLSI unit handling, two fictional demo draws, user confirmation, blood PhenoAge, trend across draws, formula drivers between draws, HTML report, PLSI evidence search and verification, PLSI screening and plan gates, independent challenger, user-only plan start, PLSI plan list and due predictions.
+Strict CSV review, PLSI unit handling, two fictional demo draws, user confirmation, correcting and deleting draws and people, blood PhenoAge, trend across draws, formula drivers between draws, HTML report, PLSI evidence search and verification, PLSI screening and plan gates, independent challenger, user-only plan start, PLSI plan list and due predictions.
 
 **Unsupported:** FHIR, PDF/photo extraction, wearables, maps other than blood PhenoAge, care context (medications, conditions) for screening, PLSI specialists beyond Nostradamus and Challenger, plan review and scoring commands, Mothership sharing, a dashboard tab and an offline security boundary. Rejecting FHIR does not repair the upstream FHIR importer.
 

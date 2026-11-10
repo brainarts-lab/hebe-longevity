@@ -111,8 +111,13 @@ class Service:
                 with db: yield db
             finally: db.close()
         return connection()
-    def preview(self,data,birth_year,person):
+    def preview(self,data,birth_year,person,replaces=None):
         body=parse(data,birth_year,person)
+        if replaces:
+            old=self.result(replaces)
+            if old['person_id']!=person:raise ValueError('A correction must keep the same person.')
+            if person==DEMO_PERSON:raise ValueError('Demo values are fixed. Delete the demo person to start over.')
+            body['replaces']=replaces
         # Check arithmetic before any durable measurement write.
         self.calculate(body)
         serial=encode(body);key=hashlib.sha256(serial.encode()).hexdigest()
@@ -122,7 +127,7 @@ class Service:
             if any(json.loads(x[0])['birth_year']!=birth_year for x in existing):
                 raise ValueError('Birth year conflicts with the existing person.')
             db.execute('INSERT INTO previews VALUES (?,?,?) ON CONFLICT(id) DO UPDATE SET expires=excluded.expires',(key,serial,time.time()+1800))
-        return {'id':key,'person_id':person,'draw_id':body['draw_id'],'measured_at':body['measured_at'],
+        return {'id':key,'person_id':person,'draw_id':body['draw_id'],'measured_at':body['measured_at'],'replaces':replaces or None,
                 'birth_year':birth_year,'markers':body['rows'],'conversions':body['conversions'],'disclaimer':DISCLAIMER,'expires_in_seconds':1800}
     @staticmethod
     def calculate(body):
@@ -143,15 +148,60 @@ class Service:
             if not row or row[1]<time.time():raise ValueError('Preview missing or expired; preview again.')
             if hashlib.sha256(row[0].encode()).hexdigest()!=key:raise ValueError('Preview integrity check failed.')
             body=json.loads(row[0])
-            if db.execute('SELECT 1 FROM results WHERE person=? AND draw=?',(body['person_id'],body['draw_id'])).fetchone():
-                raise ValueError('This draw already exists; corrections require a future revision workflow.')
+            replaces=body.pop('replaces',None)
+            if replaces and not db.execute('SELECT 1 FROM results WHERE id=? AND person=?',(replaces,body['person_id'])).fetchone():
+                raise ValueError('The blood draw you are correcting no longer exists.')
+            if db.execute('SELECT 1 FROM results WHERE person=? AND draw=? AND id IS NOT ?',(body['person_id'],body['draw_id'],replaces)).fetchone():
+                raise ValueError('A blood draw from this date is already saved for this person. Correct or delete it under Blood draws.')
             existing=db.execute('SELECT body FROM results WHERE person=?',(body['person_id'],)).fetchall()
             if any(json.loads(x[0])['birth_year']!=body['birth_year'] for x in existing):
                 raise ValueError('Birth year conflicts with the existing person.')
             result={**body,**self.calculate(body),'id':key,'plsi_commit':PIN,'disclaimer':DISCLAIMER}
+            if replaces:
+                result['corrects']=replaces
+                db.execute('DELETE FROM results WHERE id=?',(replaces,))
             db.execute('INSERT INTO results VALUES (?,?,?,?)',(key,body['person_id'],body['draw_id'],encode(result)))
             db.execute('DELETE FROM previews WHERE id=?',(key,))
+        if replaces:self._forget_reports([replaces])
         return result
+    def result(self,key):
+        if not isinstance(key,str) or not re.fullmatch('[0-9a-f]{64}',key):raise ValueError('Unknown blood draw.')
+        with self.db() as db:row=db.execute('SELECT body FROM results WHERE id=?',(key,)).fetchone()
+        if not row:raise ValueError('Unknown blood draw.')
+        return json.loads(row[0])
+    def _forget_reports(self,keys):
+        for key in keys:(self.home/f'report-{key}.html').unlink(missing_ok=True)
+    def delete_draw(self,key):
+        """Remove one confirmed blood draw. PLSI retracts its values on the next sync (plsi revise)."""
+        person=self.result(key)['person_id']
+        if len(self.history(person))==1:  # the last draw: nothing is left to plan on, so the person goes too
+            self.delete_person(person);return person
+        with self.db() as db:db.execute('DELETE FROM results WHERE id=?',(key,))
+        self._forget_reports([key])
+        return person
+    def delete_person(self,person):
+        """Remove everything Hebe and PLSI hold for one person: draws, previews, plan drafts, reports and the
+        person's PLSI record, including started plans."""
+        if not isinstance(person,str) or not ID.fullmatch(person):raise ValueError('Unknown person.')
+        import shutil
+        with self.db() as db:
+            db.execute('BEGIN IMMEDIATE')
+            keys=[k for (k,) in db.execute('SELECT id FROM results WHERE person=?',(person,))]
+            if not keys:raise ValueError('Unknown person.')
+            db.execute('DELETE FROM results WHERE person=?',(person,))
+            for key,body in db.execute('SELECT id,body FROM previews').fetchall():
+                if json.loads(body).get('person_id')==person:db.execute('DELETE FROM previews WHERE id=?',(key,))
+            plans=[]
+            if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='plan_drafts'").fetchone():
+                plans=[k for (k,) in db.execute('SELECT id FROM plan_drafts WHERE person=?',(person,))]
+                db.execute('DELETE FROM plan_drafts WHERE person=?',(person,))
+        self._forget_reports(keys)
+        work=self.home/'plsi-work'
+        for name in [f'{person}-draws.csv']+[f'{k}.{x}' for k in plans for x in ('plan.json','findings.json','start.json','start-findings.json')]:
+            (work/name).unlink(missing_ok=True)
+        record=self.home/'plsi'/person
+        if record.is_dir() and record.parent==self.home/'plsi':shutil.rmtree(record)
+        return {'person_id':person,'draws':len(keys),'plans':len(plans)}
     def discard(self,key):
         with self.db() as db:db.execute('DELETE FROM previews WHERE id=?',(key,))
     def results(self):

@@ -32,7 +32,8 @@ const CSS = `@import url('${FONTS}');
 box-sizing:border-box;height:100%;overflow:auto;color:var(--hb-text);
 font:15px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 .hebe[data-mode=dark]{--hb-gold:#DEB88A;--hb-gold-soft:#B08A5B;--hb-on-accent:#0a0908;--hb-fill:linear-gradient(90deg,#7C603F,#B08A5B 50%,#DEB88A)}
-.hebe *{box-sizing:border-box}.hebe button,.hebe input,.hebe textarea{font:inherit;color:inherit}
+.hebe *{box-sizing:border-box}.hebe button,.hebe input,.hebe textarea,.hebe select{font:inherit;color:inherit}.hebe select option{color:#1f1a12;background:#fff}
+.hebe input:disabled,.hebe select:disabled{opacity:.55;cursor:not-allowed}
 .hb-wrap{max-width:1040px;margin:0 auto;padding:28px clamp(18px,4vw,48px) 56px}
 .hb-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:26px;flex-wrap:wrap}
 .hb-brand{display:flex;align-items:center;gap:12px}
@@ -129,6 +130,13 @@ color:#ece3d2;padding:clamp(28px,4.4vw,52px);display:grid;grid-template-columns:
 .hb-dcard{display:flex;align-items:center;gap:16px;border:1px solid var(--hb-line);border-radius:14px;padding:14px 16px;max-width:520px;background:var(--hb-card)}
 .hb-dcard .hb-big{font:500 36px/1 var(--hb-serif);font-variant-numeric:lining-nums tabular-nums}
 .hb-dcard .hb-big span{font:500 10px/1 var(--hb-caps);letter-spacing:.22em;text-transform:uppercase;color:var(--hb-muted)}
+.hb-draws{width:100%;border-collapse:collapse;font-size:14px}.hb-draws td{padding:12px 0;border-top:1px solid var(--hb-line);vertical-align:middle}
+.hb-draws td:nth-child(2){font:400 22px/1 var(--hb-serif);font-variant-numeric:lining-nums tabular-nums;white-space:nowrap}
+.hb-draws td:last-child{text-align:right;white-space:nowrap}.hb-draws small{display:block;color:var(--hb-faint);font:400 12px/1.4 -apple-system,BlinkMacSystemFont,system-ui,sans-serif;margin-top:4px}
+.hb-draws .hb-link+.hb-link{margin-left:16px}.hb-draws tr.hb-sel td:first-child b{color:var(--hb-gold)}
+.hebe .hb-danger{color:var(--hb-red)}.hebe .hb-btn.hb-danger{border-color:color-mix(in srgb,var(--hb-red) 45%,transparent);background:transparent}
+.hb-ask-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.hb-draws .hb-ask-row{justify-content:flex-end}.hb-ask-row span{font-size:13px;color:var(--hb-muted)}
+@media(max-width:560px){.hb-draws td:last-child{white-space:normal}}
 @media(max-width:760px){.hb-panel,.hb-herogrid,.hb-steps,.hb-options,.hb-grid2,.hb-meta{grid-template-columns:1fr}.hb-bust{max-width:280px;margin:0 auto -20px;order:-1}}
 @media(prefers-reduced-motion:reduce){.hb-spin{animation:none}.hb-btn{transition:none}}
 `
@@ -262,9 +270,11 @@ function Welcome({ ctx, start, importOwn, demo }) {
 function Review({ preview, busy, save, cancel }) {
   const conv = preview.conversions
   return h('div', { className: 'hb-card' },
-    h('div', { className: 'hb-eyebrow' }, preview.demo ? 'Demo data, fictional person' : 'Your blood panel'),
-    h('h2', { style: { font: '600 32px/1.1 var(--hb-serif)', margin: '8px 0 6px' } }, 'Check your values before saving'),
-    h('p', { style: { color: 'var(--hb-muted)', margin: '0 0 14px' } }, 'Hebe calculates only after you confirm. Saved values cannot be changed later.'),
+    h('div', { className: 'hb-eyebrow' }, preview.replaces ? 'Correction' : preview.demo ? 'Demo data, fictional person' : 'Your blood panel'),
+    h('h2', { style: { font: '500 32px/1.1 var(--hb-serif)', margin: '8px 0 6px' } }, preview.replaces ? 'Check your corrected values' : 'Check your values before saving'),
+    h('p', { style: { color: 'var(--hb-muted)', margin: '0 0 14px' } }, preview.replaces
+      ? 'Saving replaces the earlier values of this blood draw and calculates again. Hebe\'s PLSI record keeps a note that they were corrected.'
+      : 'Hebe calculates only after you confirm. You can correct or delete a draw later under Blood draws.'),
     h('div', { className: 'hb-meta' },
       h('div', null, h('small', null, 'Person'), h('b', null, pretty(preview.person_id))),
       h('div', null, h('small', null, 'Born'), h('b', null, preview.birth_year)),
@@ -277,7 +287,7 @@ function Review({ preview, busy, save, cancel }) {
       h('li', null, 'One person, one blood draw, final lab values'),
       h('li', null, conv ? `${conv} ${conv === 1 ? 'unit' : 'units'} converted with documented factors` : 'All units already match the formula')),
     h('div', { className: 'hb-row', style: { marginTop: 20 } },
-      h('button', { type: 'button', className: 'hb-btn hb-primary', disabled: busy, onClick: save }, 'Save and calculate'),
+      h('button', { type: 'button', className: 'hb-btn hb-primary', disabled: busy, onClick: save }, preview.replaces ? 'Save correction' : 'Save and calculate'),
       h('button', { type: 'button', className: 'hb-btn', disabled: busy, onClick: cancel }, 'Cancel')))
 }
 
@@ -294,9 +304,14 @@ const MARKERS = [
   ['wbc', 'White blood cells', [['10*9/L', '×10⁹/L'], ['10*3/uL', '×10³/µL']]]
 ]
 
-function ManualForm({ busy, submit, back, ctx }) {
-  const [vals, setVals] = React.useState({}), [units, setUnits] = React.useState({})
-  const [date, setDate] = React.useState(''), [year, setYear] = React.useState(''), [person, setPerson] = React.useState('me')
+function ManualForm({ busy, submit, back, ctx, initial }) {
+  const start = initial || {}, rows = start.rows || []
+  const [vals, setVals] = React.useState(() => Object.fromEntries(rows.map(r => [r.marker, r.value])))
+  const [units, setUnits] = React.useState(() => Object.fromEntries(rows.map(r => [r.marker, r.unit])))
+  const [date, setDate] = React.useState(start.measured_at || ''), [year, setYear] = React.useState(start.birth_year ? String(start.birth_year) : '')
+  const [person, setPerson] = React.useState(start.person_id || 'me'), fixed = !!start.replaces
+  // A unit from an uploaded CSV that the form does not list stays selectable when correcting that draw.
+  const options = (k, us) => units[k] && !us.some(([v]) => v === units[k]) ? [...us, [units[k], units[k]]] : us
   const num = v => String(v || '').trim().replace(',', '.')
   const ok = MARKERS.every(([k]) => /^\d+(\.\d+)?$/.test(num(vals[k])))
   const ready = ok && /^\d{4}-\d{2}-\d{2}$/.test(date) && /^\d{4}$/.test(year) && /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/.test(person)
@@ -308,15 +323,15 @@ function ManualForm({ busy, submit, back, ctx }) {
       h('div', { className: 'hb-mgrid' }, MARKERS.map(([k, label, us]) => h('label', { key: k, className: 'hb-mrow' },
         h('span', null, label),
         h('input', { inputMode: 'decimal', value: vals[k] || '', 'aria-label': label + ' value', onChange: e => setVals(v => ({ ...v, [k]: e.target.value })) }),
-        us.length > 1
-          ? h('select', { value: units[k] || us[0][0], 'aria-label': label + ' unit', onChange: e => setUnits(u => ({ ...u, [k]: e.target.value })) }, us.map(([v, l]) => h('option', { key: v, value: v }, l)))
+        options(k, us).length > 1
+          ? h('select', { value: units[k] || us[0][0], 'aria-label': label + ' unit', onChange: e => setUnits(u => ({ ...u, [k]: e.target.value })) }, options(k, us).map(([v, l]) => h('option', { key: v, value: v }, l)))
           : h('em', null, us[0][1])))),
       h('div', { className: 'hb-meta', style: { marginTop: 16 } },
         h('label', { className: 'hb-field' }, 'Blood drawn on', h('input', { type: 'date', value: date, onChange: e => setDate(e.target.value) })),
-        h('label', { className: 'hb-field' }, 'Birth year', h('input', { inputMode: 'numeric', value: year, placeholder: '1981', onChange: e => setYear(e.target.value.trim()) })),
-        h('label', { className: 'hb-field' }, 'Name', h('input', { value: person, onChange: e => setPerson(e.target.value.trim()) }))),
+        h('label', { className: 'hb-field' }, 'Birth year', h('input', { inputMode: 'numeric', value: year, placeholder: '1981', disabled: fixed, onChange: e => setYear(e.target.value.trim()) })),
+        h('label', { className: 'hb-field' }, 'Name', h('input', { value: person, disabled: fixed, onChange: e => setPerson(e.target.value.trim()) }))),
       h('div', { className: 'hb-row' },
-        h('button', { type: 'button', className: 'hb-btn hb-primary', disabled: busy || !ready, onClick: () => submit(csv(), Number(year), person) }, 'Check values'),
+        h('button', { type: 'button', className: 'hb-btn hb-primary', disabled: busy || !ready, onClick: () => submit(csv(), Number(year), person, start.replaces) }, fixed ? 'Check corrected values' : 'Check values'),
         h('button', { type: 'button', className: 'hb-btn', disabled: busy, onClick: back }, 'Back'))),
     h('div', { className: 'hb-card' },
       h('h3', null, 'Where to find these'),
@@ -325,11 +340,13 @@ function ManualForm({ busy, submit, back, ctx }) {
         h('li', null, 'Pick the unit printed on your lab report. Hebe converts it with documented factors'),
         h('li', null, 'Use one blood draw. Fasting glucose gives the most comparable result'),
         h('li', null, 'You see every value again before anything is saved')),
-      h('p', { className: 'hb-note' }, 'Your values stay in this Hermes. Name can be a nickname; use the same one for later draws to see your trend.')))
+      h('p', { className: 'hb-note' }, fixed ? 'Name and birth year stay as saved. To change them, delete this person under Blood draws and add the draws again.'
+        : 'Your values stay in this Hermes. Name can be a nickname; use the same one for later draws to see your trend.')))
 }
 
-function ImportForm({ ctx, busy, submit, back }) {
-  const [csv, setCsv] = React.useState(''), [year, setYear] = React.useState(''), [person, setPerson] = React.useState('')
+function ImportForm({ ctx, busy, submit, back, initial }) {
+  const start = initial || {}
+  const [csv, setCsv] = React.useState(''), [year, setYear] = React.useState(start.birth_year ? String(start.birth_year) : ''), [person, setPerson] = React.useState(start.person_id || '')
   const file = e => {
     const f = e.target.files && e.target.files[0]
     if (!f) return
@@ -457,6 +474,50 @@ function Plans({ ctx, person, refreshKey }) {
     h('button', { type: 'button', className: 'hb-btn', style: { justifySelf: 'start' }, onClick: () => askHebe(ctx, draft) }, 'Draft another plan with Hebe'))
 }
 
+// Every saved draw of one person: view its report, correct it or delete it, and remove the person altogether.
+function Draws({ ctx, p, shown, view, edit, changed, addDemo, addOwn, demoAvailable }) {
+  const [ask, setAsk] = React.useState(''), [busy, setBusy] = React.useState(false), [error, setError] = React.useState('')
+  const name = pretty(p.person_id), only = p.draws.length === 1
+  const remove = async (action, id, path) => {
+    setBusy(true); setError('')
+    try {
+      const { confirmation } = await ctx.rest('/confirm', { method: 'POST', body: { action, id } })
+      const out = await ctx.rest(path, { method: 'POST', body: { id, confirmation } })
+      setAsk(''); changed(out, action === 'delete_person' || (action === 'delete' && only)
+        ? `${name} and all their blood draws and plans are deleted.` : 'Blood draw deleted. Your result and trend are updated.')
+    } catch (e) { setError(message(e)) } finally { setBusy(false) }
+  }
+  const confirmRow = (text, label, act) => h('div', { className: 'hb-ask-row' }, h('span', null, text),
+    h('button', { type: 'button', className: 'hb-btn hb-danger', disabled: busy, onClick: act }, busy ? 'Deleting…' : label),
+    h('button', { type: 'button', className: 'hb-btn', disabled: busy, onClick: () => setAsk('') }, 'Keep'))
+  const draws = [...p.draws].reverse()
+  return h('div', { className: 'hb-plan' },
+    error && h('div', { className: 'hb-banner hb-error' }, error),
+    h('div', { className: 'hb-card' },
+      h('h3', null, 'Blood draws'),
+      h('table', { className: 'hb-draws' }, h('tbody', null, draws.map(d => h('tr', { key: d.id, className: d.id === shown ? 'hb-sel' : '' },
+        h('td', null, h('b', null, day(d.measured_at)), h('small', null, [d.id === shown && 'Shown under Your result', d.corrected && 'Corrected'].filter(Boolean).join(' · ') || ' ')),
+        h('td', null, one(d.pheno_age), h('small', null, versus(d.delta).replace('your calendar age', 'calendar age'))),
+        h('td', null, ask === d.id
+          ? confirmRow(only ? `Deleting the only draw removes ${name} with their plans.` : 'Delete this draw?', 'Delete', () => remove('delete', d.id, '/delete'))
+          : h(React.Fragment, null,
+              h('button', { type: 'button', className: 'hb-link', onClick: () => view(d.id) }, 'View'),
+              !p.demo && h('button', { type: 'button', className: 'hb-link', onClick: () => edit(d.id) }, 'Correct'),
+              h('button', { type: 'button', className: 'hb-link hb-danger', onClick: () => { setAsk(d.id); setError('') } }, 'Delete'))))))),
+      p.demo && h('p', { className: 'hb-note' }, 'Demo values are fixed. Delete a demo draw to add it again, or delete Alex Demo to see the start page.')),
+    h('div', { className: 'hb-options' },
+      demoAvailable && p.demo && h('button', { type: 'button', className: 'hb-card hb-option', onClick: addDemo },
+        h('b', null, 'Add the demo draw'), h('span', null, 'The fictional draw that is not saved yet. With two draws your result shows a trend and what moved it.')),
+      h('button', { type: 'button', className: 'hb-card hb-option', onClick: addOwn },
+        h('b', null, p.demo ? 'Add my blood results' : 'Add a blood draw'), h('span', null, 'Type in nine values from one lab report, or upload a CSV. You check every value before saving.'))),
+    h('div', { className: 'hb-card' },
+      h('h3', null, `Delete ${name}`),
+      h('p', { className: 'hb-note', style: { marginTop: 0 } }, `Removes all ${p.draws.length} blood ${p.draws.length === 1 ? 'draw' : 'draws'}, plans and Hebe's PLSI record of ${name} from this Hermes. This cannot be undone. Chats keep what was already said in them.`),
+      ask === 'person'
+        ? confirmRow(`Delete ${name} and everything Hebe stores for them?`, `Delete ${name}`, () => remove('delete_person', p.person_id, '/delete-person'))
+        : h('button', { type: 'button', className: 'hb-btn hb-danger', onClick: () => { setAsk('person'); setError('') } }, `Delete ${name}`)))
+}
+
 // Light or dark as the app paints it, so Hebe's gold stays readable in both.
 function useMode() {
   const t = useTheme()
@@ -468,6 +529,7 @@ function App({ ctx }) {
   const [boot, setBoot] = React.useState(null), [error, setError] = React.useState(''), [busy, setBusy] = React.useState('')
   const [view, setView] = React.useState('main'), [tab, setTab] = React.useState('report'), [preview, setPreview] = React.useState(null)
   const [person, setPerson] = React.useState(''), [flash, setFlash] = React.useState(''), [planKey, setPlanKey] = React.useState(0), [importMode, setImportMode] = React.useState('manual')
+  const [shown, setShown] = React.useState(''), [initial, setInitial] = React.useState(null)
   const load = () => ctx.rest('/bootstrap').then(b => {
     setBoot(b)
     setPerson(p => b.people.some(x => x.person_id === p) ? p : (b.people[b.people.length - 1] || {}).person_id || '')
@@ -477,47 +539,64 @@ function App({ ctx }) {
   const previewDemo = () => run('Preparing the demo blood panel…', async () => {
     setPreview(await ctx.rest('/preview', { method: 'POST', body: { source: 'demo' } })); setView('review'); setFlash('')
   })
-  const previewCsv = (csv, birth_year, person_id) => run('Checking your values…', async () => {
-    setPreview(await ctx.rest('/preview', { method: 'POST', body: { source: 'csv', csv, birth_year, person_id } })); setView('review'); setFlash('')
+  const previewCsv = (csv, birth_year, person_id, replaces) => run('Checking your values…', async () => {
+    setPreview(await ctx.rest('/preview', { method: 'POST', body: { source: 'csv', csv, birth_year, person_id, replaces: replaces || '' } })); setView('review'); setFlash('')
   })
+  // Add for the person on screen (name and birth year filled in), or correct one of their draws.
+  const addOwn = p => { setInitial(p && !p.demo ? { person_id: p.person_id, birth_year: p.birth_year } : null); setImportMode('manual'); setView('import'); setFlash('') }
+  const edit = id => run('Opening this blood draw…', async () => {
+    const d = await ctx.rest('/draw/' + id)
+    setInitial({ ...d, replaces: d.id }); setImportMode('manual'); setView('import'); setFlash('')
+  })
+  const changed = (out, note) => {
+    setBoot(b => ({ ...b, people: out.people, demo_available: out.demo_available })); setShown(''); setFlash(note)
+    if (!out.people.some(x => x.person_id === person)) { setTab('report'); setPerson((out.people[out.people.length - 1] || {}).person_id || '') }
+  }
   const save = () => run('Calculating your Blood PhenoAge…', async () => {
     const { confirmation } = await ctx.rest('/confirm', { method: 'POST', body: { action: 'save', id: preview.id } })
     const out = await ctx.rest('/save', { method: 'POST', body: { id: preview.id, confirmation } })
     const s = out.saved
     setBoot(b => ({ ...b, people: out.people, demo_available: b.demo_available })); setPerson(s.person_id)
-    setFlash(`Saved. Blood PhenoAge for ${day(s.measured_at)}: ${one(s.pheno_age)} years, ${versus(s.delta)}.`)
-    setPreview(null); setView('main'); setTab('report'); load()
+    setFlash(`${preview.replaces ? 'Corrected' : 'Saved'}. Blood PhenoAge for ${day(s.measured_at)}: ${one(s.pheno_age)} years, ${versus(s.delta)}.`)
+    setPreview(null); setInitial(null); setShown(s.id); setView('main'); setTab('report'); load()
   })
-  const cancel = () => { if (preview) ctx.rest('/discard', { method: 'POST', body: { id: preview.id } }).catch(() => {}); setPreview(null); setView('main') }
+  const cancel = () => { if (preview) ctx.rest('/discard', { method: 'POST', body: { id: preview.id } }).catch(() => {}); setPreview(null); setInitial(null); setView('main') }
+  const back = () => { setInitial(null); setView('main') }
 
   let body
   if (!boot) body = error ? h('div', { className: 'hb-banner hb-error' }, error) : h(Busy, { label: 'Opening Hebe…' })
   else if (busy) body = h(Busy, { label: busy })
   else if (view === 'review' && preview) body = h(Review, { preview, busy: !!busy, save, cancel })
-  else if (view === 'import') body = h(React.Fragment, null,
-    h('div', { className: 'hb-bar' }, h('div', { className: 'hb-person' }, 'Add your blood results', h('small', null, 'Nine values from one routine blood test')),
-      h('div', { className: 'hb-tabs', role: 'tablist' }, [['manual', 'Type them in'], ['csv', 'Upload a CSV']].map(([k, l]) =>
-        h('button', { key: k, type: 'button', role: 'tab', className: 'hb-tab', 'aria-selected': importMode === k, onClick: () => setImportMode(k) }, l)))),
-    importMode === 'manual' ? h(ManualForm, { ctx, busy: !!busy, submit: previewCsv, back: () => setView('main') })
-      : h(ImportForm, { ctx, busy: !!busy, submit: previewCsv, back: () => setView('main') }))
-  else if (!boot.people.length) body = h(Welcome, { ctx, start: previewDemo, importOwn: () => setView('import'), demo: boot.demo_available })
+  else if (view === 'import') body = initial && initial.replaces
+    ? h(React.Fragment, null,
+        h('div', { className: 'hb-bar' }, h('div', { className: 'hb-person' }, 'Correct a blood draw',
+          h('small', null, `${pretty(initial.person_id)} · blood drawn ${day(initial.measured_at)}`))),
+        h(ManualForm, { key: initial.replaces, ctx, busy: !!busy, submit: previewCsv, back, initial }))
+    : h(React.Fragment, null,
+        h('div', { className: 'hb-bar' }, h('div', { className: 'hb-person' }, 'Add your blood results', h('small', null, 'Nine values from one routine blood test')),
+          h('div', { className: 'hb-tabs', role: 'tablist' }, [['manual', 'Type them in'], ['csv', 'Upload a CSV']].map(([k, l]) =>
+            h('button', { key: k, type: 'button', role: 'tab', className: 'hb-tab', 'aria-selected': importMode === k, onClick: () => setImportMode(k) }, l)))),
+        importMode === 'manual' ? h(ManualForm, { ctx, busy: !!busy, submit: previewCsv, back, initial })
+          : h(ImportForm, { ctx, busy: !!busy, submit: previewCsv, back, initial }))
+  else if (!boot.people.length) body = h(Welcome, { ctx, start: previewDemo, importOwn: () => addOwn(null), demo: boot.demo_available })
   else {
     const p = boot.people.find(x => x.person_id === person) || boot.people[0], latest = p.latest
+    const current = p.draws.find(d => d.id === shown) || latest
     body = h(React.Fragment, null,
       h('div', { className: 'hb-bar' },
         h('div', { className: 'hb-person' }, pretty(p.person_id),
           h('small', null, `${p.draws.length} blood ${p.draws.length === 1 ? 'draw' : 'draws'} · latest ${day(latest.measured_at)}${p.demo ? ' · fictional demo person' : ''}`)),
-        h('div', { className: 'hb-tabs', role: 'tablist' }, [['report', 'Your result'], ['plans', 'Plans'], ['add', 'Add blood draw']].map(([k, l]) =>
+        h('div', { className: 'hb-tabs', role: 'tablist' }, [['report', 'Your result'], ['plans', 'Plans'], ['draws', 'Blood draws']].map(([k, l]) =>
           h('button', { key: k, type: 'button', role: 'tab', className: 'hb-tab', 'aria-selected': tab === k, onClick: () => setTab(k) }, l)))),
       boot.people.length > 1 && h('div', { className: 'hb-row', style: { marginBottom: 14 } }, boot.people.map(x =>
-        h('button', { key: x.person_id, type: 'button', className: 'hb-chip', style: { fontWeight: x.person_id === p.person_id ? 600 : 400 }, onClick: () => setPerson(x.person_id) }, pretty(x.person_id)))),
-      tab === 'report' && h(React.Fragment, null, h(Report, { ctx, id: latest.id }), h(Ask, { ctx })),
+        h('button', { key: x.person_id, type: 'button', className: 'hb-chip', style: { fontWeight: x.person_id === p.person_id ? 600 : 400 }, onClick: () => { setPerson(x.person_id); setShown('') } }, pretty(x.person_id)))),
+      tab === 'report' && h(React.Fragment, null,
+        current.id !== latest.id && h('div', { className: 'hb-banner hb-ok' }, `You are looking at the draw from ${day(current.measured_at)}. `,
+          h('button', { type: 'button', className: 'hb-link', onClick: () => setShown('') }, 'Show the latest')),
+        h(Report, { ctx, id: current.id }), h(Ask, { ctx })),
       tab === 'plans' && h(Plans, { ctx, person: p.person_id, refreshKey: planKey }),
-      tab === 'add' && h('div', { className: 'hb-options' },
-        boot.demo_available && p.demo && h('button', { type: 'button', className: 'hb-card hb-option', onClick: previewDemo },
-          h('b', null, 'Add the earlier demo draw'), h('span', null, 'A second fictional draw from October 2025 in typical lab units. Your result then shows a trend and what moved it.')),
-        h('button', { type: 'button', className: 'hb-card hb-option', onClick: () => setView('import') },
-          h('b', null, 'Add my blood results'), h('span', null, 'Type in nine values from one lab report, or upload a CSV. You check every value before saving.'))))
+      tab === 'draws' && h(Draws, { ctx, p, shown: current.id, view: id => { setShown(id); setTab('report') }, edit, changed,
+        addDemo: previewDemo, addOwn: () => addOwn(p), demoAvailable: boot.demo_available }))
   }
   return h('div', { className: 'hebe', 'data-mode': mode }, h('style', null, CSS),
     h('div', { className: 'hb-wrap' },

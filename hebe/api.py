@@ -47,16 +47,22 @@ class PreviewIn(Input):
     csv: str = Field(default='', max_length=65536)
     birth_year: Optional[int] = None
     person_id: str = Field(default='', max_length=64)
+    replaces: str = Field(default='', max_length=64)
 
 
 class ConfirmIn(Input):
-    action: Literal['save', 'start']
-    id: str = Field(min_length=6, max_length=64)
+    action: Literal['save', 'start', 'delete', 'delete_person']
+    id: str = Field(min_length=1, max_length=64)
     start_on: str = Field(default='', max_length=10)
 
 
 class SaveIn(Input):
     id: str = Field(min_length=64, max_length=64)
+    confirmation: str = Field(min_length=32, max_length=100)
+
+
+class DeleteIn(Input):
+    id: str = Field(min_length=1, max_length=64)
     confirmation: str = Field(min_length=32, max_length=100)
 
 
@@ -83,7 +89,8 @@ def _people(service):
     for person in sorted(people):
         history = service.history(person)
         latest = history[-1]
-        entry = {'person_id': person, 'demo': person == DEMO_PERSON, 'draws': [_summary(r) for r in history],
+        entry = {'person_id': person, 'demo': person == DEMO_PERSON, 'birth_year': latest['birth_year'],
+                 'draws': [{**_summary(r), 'corrected': bool(r.get('corrects'))} for r in history],
                  'latest': _summary(latest), 'movers': []}
         before = previous_draw(history, latest)
         if before:
@@ -97,7 +104,7 @@ def _preview_view(p):
     conv = {c['marker']: c for c in p.get('conversions', [])}
     rows = sorted(p['markers'], key=lambda r: ORDER.index(r['marker']) if r['marker'] in ORDER else 99)
     return {'id': p['id'], 'person_id': p['person_id'], 'draw_id': p['draw_id'], 'measured_at': p['measured_at'],
-            'birth_year': p['birth_year'], 'demo': p['person_id'] == DEMO_PERSON,
+            'birth_year': p['birth_year'], 'demo': p['person_id'] == DEMO_PERSON, 'replaces': p.get('replaces'),
             'markers': [{'marker': r['marker'], 'name': marker_name(r['marker']), 'value': r['value'],
                          'unit': unit_label(r['unit']),
                          'converted': ({'value': conv[r['marker']]['value'], 'unit': unit_label(conv[r['marker']]['unit'])}
@@ -188,7 +195,9 @@ def create_router(home_provider):
                 raise ValueError('Choose a short name for this person, using letters, numbers and dashes.')
             if body.birth_year is None or not 1900 <= body.birth_year <= date.today().year:
                 raise ValueError('Enter a birth year such as 1981.')
-            return _preview_view(s.preview(body.csv.encode('utf-8'), body.birth_year, body.person_id))
+            if body.replaces and not re.fullmatch('[0-9a-f]{64}', body.replaces):
+                raise ValueError('Unknown blood draw.')
+            return _preview_view(s.preview(body.csv.encode('utf-8'), body.birth_year, body.person_id, body.replaces or None))
         return call(run)
 
     @router.post('/confirm')
@@ -199,6 +208,12 @@ def create_router(home_provider):
                 date.fromisoformat(body.start_on)
                 key = Plans(s.home).draft(body.id)[0]
                 intent = {'action': 'start', 'id': key, 'start_on': body.start_on}
+            elif body.action == 'delete':
+                intent = {'action': 'delete', 'id': s.result(body.id)['id']}
+            elif body.action == 'delete_person':
+                if not ID.fullmatch(body.id) or not s.history(body.id):
+                    raise ValueError('Unknown person.')
+                intent = {'action': 'delete_person', 'id': body.id}
             else:
                 intent = {'action': 'save', 'id': body.id}
             token = secrets.token_urlsafe(32)
@@ -218,6 +233,33 @@ def create_router(home_provider):
             consume(s, body.confirmation, {'action': 'save', 'id': body.id})
             saved = s.commit(body.id, True)
             return {'saved': _summary(saved), 'people': _people(s)}
+        return call(run)
+
+    @router.get('/draw/{result_id}')
+    def draw(result_id: str):
+        def read():
+            r = service().result(result_id)
+            return {'id': r['id'], 'person_id': r['person_id'], 'birth_year': r['birth_year'], 'measured_at': r['measured_at'],
+                    'demo': r['person_id'] == DEMO_PERSON,
+                    'rows': [{'marker': x['marker'], 'value': x['value'], 'unit': x['unit']} for x in r['rows']]}
+        return call(read)
+
+    @router.post('/delete')
+    def delete(body: DeleteIn):
+        def run():
+            s = service()
+            consume(s, body.confirmation, {'action': 'delete', 'id': body.id})
+            person = s.delete_draw(body.id)
+            return {'deleted': body.id, 'person_id': person, 'people': _people(s), 'demo_available': next_demo(s) is not None}
+        return call(run)
+
+    @router.post('/delete-person')
+    def delete_person(body: DeleteIn):
+        def run():
+            s = service()
+            consume(s, body.confirmation, {'action': 'delete_person', 'id': body.id})
+            out = s.delete_person(body.id)
+            return {**out, 'people': _people(s), 'demo_available': next_demo(s) is not None}
         return call(run)
 
     @router.post('/discard')
