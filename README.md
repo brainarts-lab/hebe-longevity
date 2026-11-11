@@ -8,6 +8,8 @@ Know your biological age. Hebe reads nine values from a routine blood test, calc
 
 Published by [BrainArts Lab](https://github.com/brainarts-lab) · [@chrisbrainarts on X](https://x.com/chrisbrainarts) · MIT licensed
 
+**Why Hebe?** In Greek myth, Hebe is the goddess of youth, daughter of Zeus and Hera and cupbearer of the gods. Her nectar and ambrosia kept the Olympians forever young, and in Euripides she gives the aging hero Iolaus his youth back for one day. A fitting patron for a longevity agent.
+
 ### What you get
 
 - **A Hebe page in Hermes Desktop.** Open **Hebe** in the sidebar: add a blood test, check every value, see your report, start plans. All with clicks, no files or commands needed

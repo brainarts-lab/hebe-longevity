@@ -151,7 +151,7 @@ const day = iso => { try { return new Date(iso + 'T12:00:00Z').toLocaleDateStrin
 const today = () => new Date().toISOString().slice(0, 10)
 const cap = t => t ? t[0].toUpperCase() + t.slice(1) : t
 const plain = t => String(t || '').replace(/phenoage_acceleration/g, 'PhenoAge gap').replace(/blood_phenoage/g, 'Blood PhenoAge').replace(/phenoage/g, 'PhenoAge').replace(/_/g, ' ')
-const signed = n => (n > 0 ? '+' : n < 0 ? '−' : '') + Math.abs(n)
+const signed = n => { const r = Math.round(Number(n) * 10) / 10; return (r > 0 ? '+' : r < 0 ? '−' : '') + Math.abs(r) }
 const SCREEN = { block: ['block', 'Blocked by screening'], caution: ['caution', 'Caution'] }
 const pretty = id => id === 'alex-demo' ? 'Alex Demo' : id
 const versus = d => Math.abs(d) < 0.05 ? 'the same as your calendar age' : `${one(Math.abs(d))} years ${d < 0 ? 'younger' : 'older'} than your calendar age`

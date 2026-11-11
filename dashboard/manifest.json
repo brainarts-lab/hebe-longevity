@@ -3,7 +3,7 @@
   "label": "Hebe",
   "description": "Personal Longevity Intelligence: Blood PhenoAge, trends and reviewed research plans.",
   "icon": "HeartPulse",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "tab": {"hidden": true},
   "api": "plugin_api.py"
 }
