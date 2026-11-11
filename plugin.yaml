@@ -1,7 +1,7 @@
 name: hebe-longevity
 version: "0.7.1"
-description: "Longevity Intelligence for Hermes. Blood PhenoAge, trend and Longevity Grok plans: the open PLSI toolbelt, pinned and unchanged, inside Hermes. Research prototype with fictional demo labs."
-author: BrainArts
+description: "Longevity Intelligence for Hermes. Blood PhenoAge, trends and reviewed research plans: the open PLSI toolbelt, pinned and unchanged, inside Hermes. Research prototype with fictional demo labs."
+author: BrainArts Lab
 license: MIT
 requires_hermes: ">=0.23.0"
 provides_tools:
@@ -13,5 +13,5 @@ provides_tools:
   - hebe_challenge
   - hebe_plans
 python_dependencies:
-  - "pydantic>=2"
-  - "PyYAML"
+  - "pydantic>=2,<3"
+  - "PyYAML>=6,<7"

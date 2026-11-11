@@ -1,4 +1,4 @@
-<p align="center"><img src="assets/hebe-banner.png" alt="Hebe: Longevity Intelligence for Hermes. Know your biological age" width="100%"></p>
+![Hebe: Longevity Intelligence for Hermes. Know your biological age](assets/hebe-banner.png)
 
 # Hebe Longevity
 
@@ -6,17 +6,27 @@
 
 Know your biological age. Hebe reads nine values from a routine blood test, calculates your Blood PhenoAge, shows what moved it and helps you plan what to try next, with the open toolbelt behind Longevity Grok running inside your Hermes.
 
+Published by [BrainArts Lab](https://github.com/brainarts-lab) · [@chrisbrainarts on X](https://x.com/chrisbrainarts) · MIT licensed
+
 ### What you get
 
 - **A Hebe page in Hermes Desktop.** Open **Hebe** in the sidebar: add a blood test, check every value, see your report, start plans. All with clicks, no files or commands needed
 - **Your Blood PhenoAge** from nine routine blood markers, calculated with the same original formula Longevity Grok uses
 - **Your trend** across blood draws and which values moved your result
 - **Your draws, under your control.** View any earlier draw, correct a typo or delete a draw. Deleting a person removes their draws, plans and PLSI record. Every change needs your click on the Hebe page
-- **A plan to lower it**, built the Longevity Grok way: verified studies, safety screening, an independent challenger model, and a start that only you can approve
+- **A research plan**, built the Longevity Grok way: verified studies, safety screening, an independent challenger model, and a start that only you can approve
 - **A Hebe theme for Hermes.** Black marble and champagne gold for the whole app, offered on the Hebe page and in Settings > Appearance. It is never switched on for you, and the Hebe page offers the way back
 - **One install.** Longevity Grok creates a team of bots; in Hermes the same roles run as skills in your agent, and your data stays in your Hermes home
 
-<p align="center"><img src="assets/hebe-flow.png" alt="How Hebe works: add a blood test, see your Blood PhenoAge, get a plan, second opinion, you decide" width="100%"></p>
+![How Hebe works: add a blood test, see your Blood PhenoAge, get a plan, second opinion, you decide](assets/hebe-flow.png)
+
+| Start in Hermes Desktop | Your Blood PhenoAge and trend |
+| --- | --- |
+| ![Hebe welcome screen in Hermes Desktop](assets/screens/01-welcome.png) | ![Blood PhenoAge report with trend and formula drivers](assets/screens/02-report.png) |
+
+| Blood draws under your control | Screened plans with a second opinion |
+| --- | --- |
+| ![Blood draws tab with view, correction and delete controls](assets/screens/03-draws.png) | ![Plans tab with safety screening, challenger verdict and user start confirmation](assets/screens/04-plans.png) |
 
 ### What you do
 
@@ -54,7 +64,7 @@ Copy `data/demo.csv` as the template. Replace fictional data with your local pse
 
 All nine markers, one matching person, one draw/date, unique observation IDs and `status=final` are required. Units follow PLSI exactly (`hebe/plsi_units.py`, the unchanged `map/units.py`): the canonical unit, a conversion sourced in the pinned PLSI map (creatinine and glucose from mg/dL, Young 1987), or PLSI's generic UCUM prefix/volume scale within the same kind of quantity (for example albumin g/dL, CRP mg/L, WBC 10\*9/L). Conversions between kinds of quantity (mass to molar) or unknown spellings are refused; no guessed conversions. Every conversion is shown before you confirm. The original value and unit stay in the confirmed snapshot. Files are limited to 64 KiB. Negative values, nonfinite values, percentages outside 0–100, CRP <=0, future dates and minors are refused. Only unsigned plain decimal notation is accepted (for example `44` or `4.4`, without spaces or exponents). With birth year alone, the collection year must be at least birth year + 19 to establish adulthood conservatively. These checks are not a complete medical plausibility assessment. Birth year is approximated to mid-year by the upstream age formula.
 
-`/hebe status` lists saved results. Several draws of the same person form a trend in the report; the headline always shows the latest draw. **What moved your result** recalculates the original PhenoAge formula with one value from the newer draw and the rest from the previous draw, the same method as PLSI's `plsi calc derive --set`. A remainder from values interacting in the formula is shown so the rows add up to the real change. This describes the formula's response, not a cause or a recommendation. No outside benchmarks or reference ranges are used. `/hebe report RESULT_ID` regenerates the report. A repeated confirmation is idempotent. Changing an existing draw is refused; corrections are not supported yet.
+`/hebe status` lists saved results. Several draws of the same person form a trend in the report; the headline always shows the latest draw. **What moved your result** recalculates the original PhenoAge formula with one value from the newer draw and the rest from the previous draw, the same method as PLSI's `plsi calc derive --set`. A remainder from values interacting in the formula is shown so the rows add up to the real change. This describes the formula's response, not a cause or a recommendation. No outside benchmarks or reference ranges are used. `/hebe report RESULT_ID` regenerates the report. A repeated confirmation is idempotent. Corrections and deletion are available through the Blood draws tab with a fresh confirmation.
 
 ## Data and approval
 
@@ -97,9 +107,9 @@ The toolbelt runs as a child process of Hermes' own Python with an allowlist of 
 
 ## Supported now
 
-Strict CSV review, PLSI unit handling, two fictional demo draws, user confirmation, correcting and deleting draws and people, blood PhenoAge, trend across draws, formula drivers between draws, HTML report, PLSI evidence search and verification, PLSI screening and plan gates, independent challenger, user-only plan start, PLSI plan list and due predictions.
+Hebe page and theme in Hermes Desktop, chat result card, strict CSV and typed entry review, PLSI unit handling, two fictional demo draws, user confirmation, correcting and deleting draws and people, blood PhenoAge, trend across draws, formula drivers between draws, HTML report, PLSI evidence search and verification, PLSI screening and plan gates, independent challenger, user-only plan start, PLSI plan list and due predictions.
 
-**Unsupported:** FHIR, PDF/photo extraction, wearables, maps other than blood PhenoAge, care context (medications, conditions) for screening, PLSI specialists beyond Nostradamus and Challenger, plan review and scoring commands, Mothership sharing, a dashboard tab and an offline security boundary. Rejecting FHIR does not repair the upstream FHIR importer.
+**Unsupported:** FHIR, PDF/photo extraction, wearables, maps other than blood PhenoAge, care context (medications, conditions) for screening, PLSI specialists beyond Nostradamus and Challenger, plan review and scoring commands, Mothership sharing, the standalone web dashboard tab (Hebe's page is in Hermes Desktop) and an offline security boundary. Rejecting FHIR does not repair the upstream FHIR importer.
 
 A subset of PLSI at commit `17c433c4a9ecb54279ab02ba1d7d63ee8e8a2e81` is bundled byte-for-byte under `vendor/plsi` (hashes in `vendor/plsi.manifest.json`; one unused file left out and listed there). No automatic updates. See `NOTICE.md`.
 
@@ -111,6 +121,6 @@ hermes plugins validate . --install-deps --json
 hermes plugins doctor . --ci
 ```
 
-Hebe's own code uses the standard library; the bundled PLSI toolbelt needs pydantic and PyYAML. The broader project contains a real Hermes install and dispatch smoke test. No full live human-dialog or browser verification has yet been claimed.
+Hebe's own code uses the standard library; the bundled PLSI toolbelt needs pydantic and PyYAML, and the API route tests use FastAPI and httpx. Verified in Hermes Desktop and headless Chrome; shared messenger dialog permissions depend on Hermes and have not been tested.
 
-Artwork: the Hebe bust in the banner, logo and Desktop page was generated with Canva from the Hebe moodboard (sources and build script in the project's `design/hebe`).
+Artwork: the Hebe bust in the banner, logo and Desktop page was generated with Canva from the Hebe moodboard.

@@ -1,7 +1,7 @@
 {
   "name": "hebe-longevity",
   "label": "Hebe",
-  "description": "Personal Longevity Intelligence: Blood PhenoAge, trend and Longevity Grok plans.",
+  "description": "Personal Longevity Intelligence: Blood PhenoAge, trends and reviewed research plans.",
   "icon": "HeartPulse",
   "version": "0.7.1",
   "tab": {"hidden": true},
