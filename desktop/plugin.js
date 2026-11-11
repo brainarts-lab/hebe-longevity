@@ -29,7 +29,7 @@ const CSS = `@import url('${FONTS}');
 --hb-serif:'Cormorant Garamond','Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
 --hb-caps:Montserrat,'Avenir Next',Avenir,'Helvetica Neue',sans-serif;
 --hb-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
-box-sizing:border-box;height:100%;overflow:auto;color:var(--hb-text);
+box-sizing:border-box;height:100%;overflow:auto;color:var(--hb-text);container:hebe/inline-size;
 font:15px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 .hebe[data-mode=dark]{--hb-gold:#DEB88A;--hb-gold-soft:#B08A5B;--hb-on-accent:#0a0908;--hb-fill:linear-gradient(90deg,#7C603F,#B08A5B 50%,#DEB88A)}
 .hebe *{box-sizing:border-box}.hebe button,.hebe input,.hebe textarea,.hebe select{font:inherit;color:inherit}.hebe select option{color:#1f1a12;background:#fff}
@@ -51,7 +51,7 @@ font:15px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-seri
 color:#ece3d2;padding:clamp(28px,4.4vw,52px);display:grid;grid-template-columns:minmax(0,1.15fr) minmax(240px,.85fr);gap:12px;align-items:center;border:1px solid rgba(176,138,91,.28)}
 .hb-panel:before{content:"";position:absolute;inset:8px;border:1px solid rgba(176,138,91,.14);border-radius:2px;pointer-events:none}
 .hb-panel .hb-eyebrow{color:#DEB88A}
-.hb-panel h1{font:400 clamp(42px,5.6vw,66px)/1.02 var(--hb-serif);letter-spacing:0;margin:18px 0 18px;text-wrap:balance;color:#f1e7d3}
+.hb-panel h1{font:400 clamp(40px,7cqi,66px)/1.02 var(--hb-serif);letter-spacing:0;margin:18px 0 18px;text-wrap:balance;color:#f1e7d3}
 .hb-panel h1 i{font-weight:500;background:linear-gradient(180deg,#F3DDB1,#DEB88A 50%,#B08A5B);-webkit-background-clip:text;background-clip:text;color:transparent;padding-right:.06em}
 .hb-panel p{font-size:15.5px;line-height:1.65;color:#b3a790;max-width:520px;margin:0 0 30px}
 .hebe .hb-panel .hb-btn{font:500 11px/1 var(--hb-caps);letter-spacing:.22em;text-transform:uppercase;border-radius:2px;padding:0 22px;min-height:46px;border-color:rgba(222,184,138,.45);background:transparent;color:#ece3d2}
@@ -105,7 +105,7 @@ color:#ece3d2;padding:clamp(28px,4.4vw,52px);display:grid;grid-template-columns:
 .hb-mgrid{display:grid;gap:8px}.hb-mrow{display:grid;grid-template-columns:minmax(0,1fr) 110px 110px;gap:10px;align-items:center;font-size:14px}
 .hb-mrow input,.hb-mrow select{width:100%;border:1px solid var(--hb-line);background:var(--ui-bg-input,transparent);border-radius:9px;padding:8px 10px;font-variant-numeric:tabular-nums}
 .hb-mrow em{font-style:normal;color:var(--hb-muted);padding-left:10px}
-@media(max-width:560px){.hb-mrow{grid-template-columns:1fr 90px 90px}}
+@container hebe (max-width:560px){.hb-mrow{grid-template-columns:1fr 90px 90px}}
 .hb-field span{font-weight:400;color:var(--hb-faint)}
 .hb-banner{border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:14px;display:flex;gap:10px;align-items:flex-start}
 .hb-error{background:color-mix(in srgb,var(--hb-red) 12%,transparent);border:1px solid color-mix(in srgb,var(--hb-red) 35%,transparent)}
@@ -130,14 +130,14 @@ color:#ece3d2;padding:clamp(28px,4.4vw,52px);display:grid;grid-template-columns:
 .hb-dcard{display:flex;align-items:center;gap:16px;border:1px solid var(--hb-line);border-radius:14px;padding:14px 16px;max-width:520px;background:var(--hb-card)}
 .hb-dcard .hb-big{font:500 36px/1 var(--hb-serif);font-variant-numeric:lining-nums tabular-nums}
 .hb-dcard .hb-big span{font:500 10px/1 var(--hb-caps);letter-spacing:.22em;text-transform:uppercase;color:var(--hb-muted)}
-.hb-draws{width:100%;border-collapse:collapse;font-size:14px}.hb-draws td{padding:12px 0;border-top:1px solid var(--hb-line);vertical-align:middle}
+.hb-draws{width:100%;border-collapse:collapse;font-size:14px}.hb-draws td{padding:12px 0;border-top:1px solid var(--hb-line);vertical-align:middle}.hb-draws td:not(:last-child){padding-right:16px}
 .hb-draws td:nth-child(2){font:400 22px/1 var(--hb-serif);font-variant-numeric:lining-nums tabular-nums;white-space:nowrap}
 .hb-draws td:last-child{text-align:right;white-space:nowrap}.hb-draws small{display:block;color:var(--hb-faint);font:400 12px/1.4 -apple-system,BlinkMacSystemFont,system-ui,sans-serif;margin-top:4px}
 .hb-draws .hb-link+.hb-link{margin-left:16px}.hb-draws tr.hb-sel td:first-child b{color:var(--hb-gold)}
 .hebe .hb-danger{color:var(--hb-red)}.hebe .hb-btn.hb-danger{border-color:color-mix(in srgb,var(--hb-red) 45%,transparent);background:transparent}
 .hb-ask-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.hb-draws .hb-ask-row{justify-content:flex-end}.hb-ask-row span{font-size:13px;color:var(--hb-muted)}
-@media(max-width:560px){.hb-draws td:last-child{white-space:normal}}
-@media(max-width:760px){.hb-panel,.hb-herogrid,.hb-steps,.hb-options,.hb-grid2,.hb-meta{grid-template-columns:1fr}.hb-bust{max-width:280px;margin:0 auto -20px;order:-1}}
+@container hebe (max-width:560px){.hb-draws td:last-child{white-space:normal}}
+@container hebe (max-width:780px){.hb-panel,.hb-herogrid,.hb-steps,.hb-options,.hb-grid2,.hb-meta{grid-template-columns:1fr}.hb-bust{max-width:280px;margin:0 auto -20px;order:-1}}
 @media(prefers-reduced-motion:reduce){.hb-spin{animation:none}.hb-btn{transition:none}}
 `
 
@@ -221,7 +221,7 @@ function ThemeSwitch() {
   if (!t || !t.setTheme) return null
   const prev = recall(), on = t.themeName === THEME.name
   const back = on && prev && (t.availableThemes || []).find(x => x.name === prev)
-  if (on) return back ? h('button', { type: 'button', className: 'hb-pill', onClick: () => { t.setTheme(prev); remember('') } }, 'Restore ' + back.label) : null
+  if (on) return back ? h('button', { type: 'button', className: 'hb-pill', onClick: () => { t.setTheme(prev); remember('') } }, 'Leave the Hebe theme') : null
   return h('button', { type: 'button', className: 'hb-pill', title: 'Black and champagne gold for all of Hermes. You can switch back here or in Settings.',
     onClick: () => { remember(t.themeName); t.setTheme(THEME.name) } }, 'Use the Hebe theme')
 }
